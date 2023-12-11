@@ -1,5 +1,6 @@
 
 using Microsoft.Toolkit.Uwp.Notifications;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace TheGrammar;
@@ -65,6 +66,9 @@ public partial class Main : Form
     {
         ApiKeyTextBox.Text = Properties.Settings.Default.ApiKey;
         PrompTextBox.Text = Properties.Settings.Default.Prompt;
+
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        Text = $"The Grammar App v{version.Major}.{version.Minor}.{version.Build}";
     }
 
     private void Main_Resize(object sender, EventArgs e)
