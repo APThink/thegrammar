@@ -41,6 +41,11 @@ jobs:
         $version = $csproj.Project.PropertyGroup.Version
         echo "VERSION=$version" >> $GITHUB_ENV
         echo "Extracted Version: $version"
+        
+    - name: Set Version Output
+      id: set_version
+      run: |
+        echo "version=${{ env.VERSION }}" >> $GITHUB_ENV
 
     - name: Create Release
       id: create_release
@@ -48,10 +53,11 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ env.VERSION }}
-        release_name: Release - ${{ steps.app_version.outputs.version }}
+        tag_name: ${{ env.version }}
+        name: Release - ${{ env.version }}
         draft: false
         prerelease: false
+        body: 'Release of version ${{ env.version }}'
 
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
