@@ -3,32 +3,40 @@ name: Build and Release .NET Application
 on:
   push:
     branches: [ master ]
+    tags:
+      - '*'
   pull_request:
     branches: [ master ]
 
 jobs:
-  build:
+  build_and_release:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: Setup .NET
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '7.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore TheGrammar.sln
+    - name: Restore Dependencies
+      run: dotnet restore TheGrammar/TheGrammar.sln
 
-    - name: Build
-      run: dotnet build TheGrammar.sln --configuration Release --no-restore
+    - name: Build Solution
+      run: dotnet build TheGrammar/TheGrammar.sln --configuration Release --no-restore
 
-    - name: Publish
-      run: dotnet publish TheGrammar.sln --configuration Release --no-restore --output publish
+    - name: Publish Application
+      run: dotnet publish TheGrammar/TheGrammar.sln --configuration Release --no-restore --output publish
 
-    - name: Zip the application
+    - name: Zip the Application
       run: Compress-Archive -Path publish/* -DestinationPath TheGrammar.zip
+
+    - name: Extract Branch or Tag Name
+      id: ref_name
+      shell: bash
+      run: echo "##[set-output name=name;]$(echo ${GITHUB_REF#refs/*/})"
 
     - name: Create Release
       id: create_release
@@ -36,13 +44,12 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        tag_name: ${{ steps.ref_name.outputs.name }}
+        release_name: Release - ${{ steps.ref_name.outputs.name }}
         draft: false
         prerelease: false
 
     - name: Upload Release Asset
-      id: upload-release-asset 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
