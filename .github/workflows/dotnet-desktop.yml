@@ -33,10 +33,12 @@ jobs:
     - name: Zip the Application
       run: Compress-Archive -Path publish/* -DestinationPath TheGrammar.zip
 
-    - name: Extract Branch or Tag Name
-      id: ref_name
-      shell: bash
-      run: echo "##[set-output name=name;]$(echo ${GITHUB_REF#refs/*/})"
+    - name: Extract Application Version
+      id: app_version
+      shell: pwsh
+      run: |
+        $version = [xml](Get-Content TheGrammar/TheGrammar.csproj).Project.PropertyGroup.Version
+        echo "::set-output name=version::$version"
 
     - name: Create Release
       id: create_release
@@ -44,8 +46,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.ref_name.outputs.name }}
-        release_name: Release - ${{ steps.ref_name.outputs.name }}
+        tag_name: ${{ steps.app_version.outputs.version }}
+        release_name: Release - ${{ steps.app_version.outputs.version }}
         draft: false
         prerelease: false
 
