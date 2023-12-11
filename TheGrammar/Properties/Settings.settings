@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TheGrammar.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="Prompt" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Bitte korrigiere alle grammatikalischen Fehler im folgenden Text, wobei der Stil, die Struktur und die Logik der Sätze unverändert bleiben sollen. Behalte auch die Originalsprache des Textes bei. Es ist wichtig, dass die Änderungen subtil sind und der Text natürlich erscheint, als wäre er anfänglich ohne Fehler geschrieben worden. Schreibe nur die korrigierte Antwort ohne zusätzliche Informationen. Konzentriere dich nur auf den Text und benutze keinen anderen Kontext. Text ist: </Value>
+    </Setting>
+    <Setting Name="ApiKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+  </Settings>
+</SettingsFile>
