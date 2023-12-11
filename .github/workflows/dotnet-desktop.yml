@@ -48,7 +48,7 @@ jobs:
     - name: Create Release
       uses: actions/create-release@v1
       with:
-        tag_name: ${{ steps.version_output.outputs.version }}
+        tag_name: test
         release_name: Release ${{ steps.version_output.outputs.version }}
         draft: false
         prerelease: false
