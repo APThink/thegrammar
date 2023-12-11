@@ -1,5 +1,6 @@
 
 using Microsoft.Toolkit.Uwp.Notifications;
+using System.Windows.Forms;
 
 namespace TheGrammar;
 
@@ -70,6 +71,16 @@ public partial class Main : Form
     {
         if (this.WindowState == FormWindowState.Minimized)
         {
+            Visible = false;
+            ShowInTaskbar = false;
+        }
+    }
+
+    private void Main_FormClosing(object sender, FormClosingEventArgs e)
+    {
+        if (e.CloseReason == CloseReason.UserClosing)
+        {
+            e.Cancel = true;
             Visible = false;
             ShowInTaskbar = false;
         }

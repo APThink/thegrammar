@@ -111,6 +111,7 @@
             StartPosition = FormStartPosition.CenterScreen;
             Text = "TheGrammar";
             WindowState = FormWindowState.Minimized;
+            FormClosing += Main_FormClosing;
             Load += Main_Load;
             Resize += Main_Resize;
             ResumeLayout(false);
