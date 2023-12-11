@@ -25,7 +25,7 @@ public class GrammarProcessor
                 outputResult += completion.Text;
             }
 
-            return outputResult.Trim();
+            return $"{outputResult.Trim()} *";
         }
         catch (Exception)
         {
