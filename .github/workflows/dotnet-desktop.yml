@@ -34,29 +34,27 @@ jobs:
       run: Compress-Archive -Path publish/* -DestinationPath TheGrammar.zip
 
     - name: Extract Application Version
+      id: app_version
       shell: pwsh
       run: |
-        [xml]$csproj = Get-Content TheGrammar/TheGrammar.csproj
-        $version = $csproj.Project.PropertyGroup.Version
-        echo "VERSION=$version" >> $GITHUB_ENV
-        echo "Extracted Version: $version"
-
-    - name: Set Version Output
-      id: version_output
-      run: echo "::set-output name=version::${{ env.VERSION }}"
+        $version = [xml](Get-Content TheGrammar/TheGrammar.csproj).Project.PropertyGroup.Version
+        echo "::set-output name=version::$version"
 
     - name: Create Release
+      id: create_release
       uses: actions/create-release@v1
-      with:
-        tag_name: test
-        release_name: Release ${{ steps.version_output.outputs.version }}
-        draft: false
-        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: test
+        release_name: Release - ${{ steps.app_version.outputs.version }}
+        draft: false
+        prerelease: false
 
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./TheGrammar.zip
