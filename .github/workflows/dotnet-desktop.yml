@@ -22,13 +22,13 @@ jobs:
         dotnet-version: '7.0.x'
 
     - name: Restore Dependencies
-      run: dotnet restore TheGrammar/TheGrammar.sln
+      run: dotnet restore TheGrammar.sln
 
     - name: Build Solution
-      run: dotnet build TheGrammar/TheGrammar.sln --configuration Release --no-restore
+      run: dotnet build TheGrammar.sln --configuration Release --no-restore
 
     - name: Publish Application
-      run: dotnet publish TheGrammar/TheGrammar.sln --configuration Release --no-restore --output publish
+      run: dotnet publish TheGrammar.sln --configuration Release --no-restore --output publish
 
     - name: Zip the Application
       run: Compress-Archive -Path publish/* -DestinationPath TheGrammar.zip
