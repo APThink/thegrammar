@@ -34,15 +34,17 @@ jobs:
       run: Compress-Archive -Path publish/* -DestinationPath TheGrammar.zip
 
     - name: Extract Application Version
+      id: extract_version
       shell: pwsh
       run: |
         [xml]$csproj = Get-Content TheGrammar/TheGrammar.csproj
         $version = $csproj.Project.PropertyGroup.Version
-        echo "APP_VERSION=$version" >> $GITHUB_ENV
         echo "Extracted Version: $version"
+        echo "::set-output name=app_version::$version"
 
-    - name: Print Environment Variable
-      run: echo "Version -  ${{ env.APP_VERSION }}"
+    - name: Use Extracted Version
+      run: |
+        echo "Version - ${{ steps.extract_version.outputs.app_version }}"
 
     - name: Create Release
       id: create_release
@@ -50,8 +52,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ env.APP_VERSION }}
-        release_name: Release - ${{ env.APP_VERSION }}
+        tag_name:  ${{ steps.extract_version.outputs.app_version }}
+        release_name: Release -  ${{ steps.extract_version.outputs.app_version }}
         draft: false
         prerelease: false
 
