@@ -38,11 +38,11 @@ jobs:
       run: |
         [xml]$csproj = Get-Content TheGrammar/TheGrammar.csproj
         $version = $csproj.Project.PropertyGroup.Version
-        echo "VERSION=$version" >> $GITHUB_ENV
+        echo "APP_VERSION=$version" >> $GITHUB_ENV
         echo "Extracted Version: $version"
 
     - name: Print Environment Variable
-      run: echo "Version -  ${{ env.VERSION }}"
+      run: echo "Version -  ${{ env.APP_VERSION }}"
 
     - name: Create Release
       id: create_release
@@ -50,8 +50,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ env.VERSION }}
-        release_name: Release - ${{ env.VERSION }}
+        tag_name: ${{ env.APP_VERSION }}
+        release_name: Release - ${{ env.APP_VERSION }}
         draft: false
         prerelease: false
 
