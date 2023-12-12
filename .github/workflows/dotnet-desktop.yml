@@ -38,7 +38,7 @@ jobs:
       run: |
         [xml]$csproj = Get-Content TheGrammar/TheGrammar.csproj
         $version = $csproj.Project.PropertyGroup.Version
-        echo "APP_VERSION=$version" >> $GITHUB_ENV
+        echo "APP_VERSION=testTag" >> $GITHUB_ENV
         echo "Extracted Version: $version"
 
     - name: Print Environment Variable
