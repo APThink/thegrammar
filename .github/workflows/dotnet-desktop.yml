@@ -41,6 +41,9 @@ jobs:
         echo "VERSION=$version" >> $GITHUB_ENV
         echo "Extracted Version: $version"
 
+    - name: Print Environment Variable
+      run: echo "Version -  ${{ env.VERSION }}"
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
