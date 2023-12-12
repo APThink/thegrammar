@@ -20,8 +20,8 @@ jobs:
         
     - name: Get color
       env:
-        SELECTED_COLOR: ${{ steps.color-selector.outputs.SELECTED_COLOR }}
-        run: echo "The selected color is $SELECTED_COLOR"
+          SELECTED_COLOR: ${{ steps.color-selector.outputs.SELECTED_COLOR }}
+      run: echo "The selected color is $SELECTED_COLOR"
       
     - name: Checkout Repository
       uses: actions/checkout@v2
