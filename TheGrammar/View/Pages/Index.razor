@@ -1,0 +1,42 @@
+﻿@page "/"
+
+<MudText Typo="Typo.h6" Style="padding-bottom: 25px">Dashboard</MudText>
+
+<MudGrid Style="padding-bottom: 25px">
+    <MudItem xs="6" >
+        <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+            <MudIcon Icon="@Icons.Material.Filled.RequestQuote" Color="Color.Primary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Requests:</MudText>
+                <MudText Typo="Typo.h6">@requestCount</MudText>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" >
+            <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+                <MudIcon Icon="@Icons.Material.Filled.Money" Color="Color.Secondary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Balance:</MudText>
+                    <MudText Typo="Typo.h6">$5,00</MudText>
+                </div>
+            </MudPaper>
+        </MudItem>
+</MudGrid>
+
+
+<MudText Typo="Typo.h6" Style="padding-bottom: 25px">Last 10</MudText>
+
+<MudPaper>
+    <MudList Clickable="false" Dense="true" DisableGutters="false">
+        @foreach (var message in messages)
+        {
+            <MudListItem Icon="@Icons.Material.Filled.ArrowRightAlt" Text="@message.Text" InitiallyExpanded="false">
+                <NestedList>
+                    <MudListItem>
+                        <MudTextField @ref="multilineReference" T="string" Label="Corrected Text" Lines="3" Variant="Variant.Outlined" Text="@message.ModifiedText" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Api" OnAdornmentClick="@(() => multilineReference.SelectRangeAsync(5, 10))" />
+                    </MudListItem>
+                </NestedList>
+            </MudListItem>
+        }
+    </MudList>
+</MudPaper>

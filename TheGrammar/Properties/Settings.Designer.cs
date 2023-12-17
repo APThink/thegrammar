@@ -37,7 +37,7 @@ namespace TheGrammar.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("sk-")]
         public string ApiKey {
             get {
                 return ((string)(this["ApiKey"]));
