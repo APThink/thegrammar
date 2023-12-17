@@ -13,6 +13,16 @@ jobs:
     runs-on: windows-latest
 
     steps:
+
+    - name: Set color
+      id: color-selector
+      run: echo "SELECTED_COLOR=green" >> "$GITHUB_OUTPUT"
+        
+    - name: Get color
+      env:
+          SELECTED_COLOR: ${{ steps.color-selector.outputs.SELECTED_COLOR }}
+      run: echo "The selected color is $SELECTED_COLOR"
+      
     - name: Checkout Repository
       uses: actions/checkout@v2
 
@@ -34,11 +44,17 @@ jobs:
       run: Compress-Archive -Path publish/* -DestinationPath TheGrammar.zip
 
     - name: Extract Application Version
-      id: app_version
+      id: extract_version
       shell: pwsh
       run: |
-        $version = [xml](Get-Content TheGrammar/TheGrammar.csproj).Project.PropertyGroup.Version
-        echo "::set-output name=version::$version"
+        [xml]$csproj = Get-Content TheGrammar/TheGrammar.csproj
+        $version = $csproj.Project.PropertyGroup.Version
+        echo "Extracted Version: $version"
+        echo "::set-output name=app_version::$version"
+
+    - name: Use Extracted Version
+      run: |
+        echo "Version - ${{ steps.extract_version.outputs.app_version }}"
 
     - name: Create Release
       id: create_release
@@ -46,8 +62,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.app_version.outputs.version }}
-        release_name: Release - ${{ steps.app_version.outputs.version }}
+        tag_name:  ${{ steps.extract_version.outputs.app_version }}
+        release_name: Release -  ${{ steps.extract_version.outputs.app_version }}
         draft: false
         prerelease: false
 
