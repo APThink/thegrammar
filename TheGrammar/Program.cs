@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using MudBlazor.Services;
+using System.Diagnostics;
 using TheGrammar.Services;
 using TheGrammar.Data;
 using OpenAI_API;
@@ -15,10 +16,24 @@ internal static class Program
     [STAThread]
     static void Main()
     {
+        var processName = Process.GetCurrentProcess().ProcessName;
+        var processes = Process.GetProcessesByName(processName);
+
+        if (processes.Length > 1)
+        {
+            MessageBox.Show("Application already running", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        RunApplication();
+    }
+
+    private static void RunApplication()
+    {
         Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.File("logs/thegrammar.txt", rollingInterval: RollingInterval.Month)
-                .CreateLogger();
+        .MinimumLevel.Debug()
+        .WriteTo.File("logs/thegrammar.txt", rollingInterval: RollingInterval.Month)
+        .CreateLogger();
 
         try
         {
@@ -112,5 +127,11 @@ internal static class Program
             .MinimumLevel.Debug()
             .WriteTo.File("logs/thegrammar.txt", rollingInterval: RollingInterval.Month)
             .CreateLogger();
+    }
+
+    private static string GenerateMutexId()
+    {
+        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+        return $"Global\\{assembly.GetName().Name}";
     }
 }
