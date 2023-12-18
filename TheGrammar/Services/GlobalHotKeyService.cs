@@ -72,6 +72,8 @@ public class GlobalHotKeyService
     {
         try
         {
+            var isCorrected = false;
+
             var staThread = new Thread(() =>
             {
                 if (Clipboard.ContainsText())
@@ -88,7 +90,7 @@ public class GlobalHotKeyService
                     SendPush(text, modText);
 
                     Clipboard.SetText(modText);
-                    new ToastContentBuilder().AddText("Text modified and copied to clipboard").Show();
+                    isCorrected = true;
                     return;
                 }
 
@@ -99,6 +101,10 @@ public class GlobalHotKeyService
             staThread.Start();
             staThread.Join();
 
+            if (isCorrected)
+            {
+                new ToastContentBuilder().AddText("Text modified and copied to clipboard").Show();
+            }
         }
         catch (Exception ex)
         {
