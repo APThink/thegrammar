@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>logo.ico</ApplicationIcon>
 	  <Product>TheGrammar</Product>
-	  <Version>1.1.2</Version>
+	  <Version>1.1.3</Version>
   </PropertyGroup>
 
   <ItemGroup>

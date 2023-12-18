@@ -13,7 +13,7 @@ public partial class Index : IDisposable
 
     private IDisposable? subscription;
 
-    private Stack<PushDto> messages = new();
+    private List<PushDto> messages = new();
     private MudTextField<string>? multilineReference;
 
     private int requestCount;
@@ -27,13 +27,15 @@ public partial class Index : IDisposable
 
     private void OnEventReceived(PushDto pushDto)
     {
-        messages.Push(pushDto);
+        messages.Insert(0, pushDto);
 
+        // Remove the oldest element if there are more than 10 elements in the list
         if (messages.Count > 10)
         {
-            messages.Pop();
+            messages.RemoveAt(10); // Removes the 11th element, keeping the list size to 10
         }
 
+        // Increment the request count and invoke the UI update
         requestCount += 1;
         InvokeAsync(StateHasChanged);
     }
@@ -53,7 +55,7 @@ public partial class Index : IDisposable
 
         foreach (var request in requests)
         {
-            messages.Push(new PushDto
+            messages.Insert(0, new PushDto
             {
                 Text = request.RequestText,
                 ModifiedText = request.ResponseText

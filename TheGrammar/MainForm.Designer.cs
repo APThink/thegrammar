@@ -36,7 +36,7 @@
             blazorWebView1.Dock = DockStyle.Fill;
             blazorWebView1.Location = new Point(0, 0);
             blazorWebView1.Name = "blazorWebView1";
-            blazorWebView1.Size = new Size(699, 708);
+            blazorWebView1.Size = new Size(699, 732);
             blazorWebView1.TabIndex = 6;
             blazorWebView1.Text = "blazorWebView1";
             // 
@@ -44,7 +44,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(699, 708);
+            ClientSize = new Size(699, 732);
             Controls.Add(blazorWebView1);
             Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
