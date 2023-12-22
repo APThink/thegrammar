@@ -40,15 +40,6 @@ jobs:
     - name: Publish Application
       run: dotnet publish TheGrammar.sln --configuration Release --no-restore --output publish
 
-    - name: Find Squirrel.exe path and add an alias
-      run: |
-        Set-Alias Squirrel ($env:USERPROFILE + "\.nuget\packages\clowd.squirrel\2.11.1\tools\Squirrel.exe");
-        Get-Alias Squirrel
-        Squirrel pack --packId "TheGrammar" --packVersion "1.1.3" --packDirectory "publish"
-        
-    - name: Zip the Application
-      run: Compress-Archive -Path publish/* -DestinationPath TheGrammar.zip
-
     - name: Extract Application Version
       id: extract_version
       shell: pwsh
@@ -61,6 +52,14 @@ jobs:
     - name: Use Extracted Version
       run: |
         echo "Version - ${{ steps.extract_version.outputs.app_version }}"
+
+    - name: Create Squirrel Package
+      run: |
+        Set-Alias Squirrel ($env:USERPROFILE + "\.nuget\packages\clowd.squirrel\2.11.1\tools\Squirrel.exe");
+        Squirrel pack --packId "TheGrammar" --packVersion ${{ steps.extract_version.outputs.app_version }}" --packDirectory "publish" --framework net7.0 
+        
+    - name: Zip the Application
+      run: Compress-Archive -Path publish/* -DestinationPath "TheGrammar_${{ steps.extract_version.outputs.app_version }}.zip"
 
     - name: Create Release
       id: create_release
