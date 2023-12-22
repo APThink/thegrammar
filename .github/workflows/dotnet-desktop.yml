@@ -44,7 +44,7 @@ jobs:
       run: |
         Set-Alias Squirrel ($env:USERPROFILE + "\.nuget\packages\clowd.squirrel\2.11.1\tools\Squirrel.exe");
         Get-Alias Squirrel
-        Squirrel --packId "TheGrammar" --packVersion "1.1.3" --packDirectory "publish"
+        Squirrel pack --packId "TheGrammar" --packVersion "1.1.3" --packDirectory "publish"
         
     - name: Zip the Application
       run: Compress-Archive -Path publish/* -DestinationPath TheGrammar.zip
