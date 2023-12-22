@@ -73,14 +73,14 @@ jobs:
         draft: false
         prerelease: false
 
-    - name: Upload TheGrammar  Asset
+    - name: Upload TheGrammar Asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./TheGrammar.zip
-        asset_name: TheGrammar.zip
+        asset_path: "./TheGrammar_${{ steps.extract_version.outputs.app_version }}.zip"
+        asset_name: "TheGrammar_${{ steps.extract_version.outputs.app_version }}.zip"
         asset_content_type: application/zip
         
     - name: Upload Squirrel Asset
