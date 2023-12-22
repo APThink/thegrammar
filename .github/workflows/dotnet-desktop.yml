@@ -40,6 +40,11 @@ jobs:
     - name: Publish Application
       run: dotnet publish TheGrammar.sln --configuration Release --no-restore --output publish
 
+    - name: Find Squirrel.exe path and add an alias
+      run: |
+        Set-Alias Squirrel ($env:USERPROFILE + "\.nuget\packages\clowd.squirrel\2.11.1\tools\Squirrel.exe");
+        Get-Alias Squirrel
+      
     - name: Zip the Application
       run: Compress-Archive -Path publish/* -DestinationPath TheGrammar.zip
 
