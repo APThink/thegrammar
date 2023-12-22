@@ -8,6 +8,7 @@ using TheGrammar.Services;
 using TheGrammar.Data;
 using OpenAI_API;
 using Serilog;
+using Squirrel;
 
 namespace TheGrammar;
 
@@ -16,15 +17,7 @@ internal static class Program
     [STAThread]
     static void Main()
     {
-        var processName = Process.GetCurrentProcess().ProcessName;
-        var processes = Process.GetProcessesByName(processName);
-
-        if (processes.Length > 1)
-        {
-            MessageBox.Show("Application already running", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-        }
-
+        SquirrelAwareApp.HandleEvents(onInitialInstall: OnAppInstall, onAppUninstall: OnAppUninstall, onEveryRun: OnAppRun);
         RunApplication();
     }
 
@@ -129,9 +122,31 @@ internal static class Program
             .CreateLogger();
     }
 
-    private static string GenerateMutexId()
+    private static void OnAppInstall(SemanticVersion version, IAppTools tools)
     {
-        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-        return $"Global\\{assembly.GetName().Name}";
+        tools.CreateShortcutForThisExe(ShortcutLocation.StartMenu | ShortcutLocation.Desktop);
     }
+
+    private static void OnAppUninstall(SemanticVersion version, IAppTools tools)
+    {
+        tools.RemoveShortcutForThisExe(ShortcutLocation.StartMenu | ShortcutLocation.Desktop);
+    }
+
+    private static void OnAppRun(SemanticVersion version, IAppTools tools, bool firstRun)
+    {
+        var processName = Process.GetCurrentProcess().ProcessName;
+        var processes = Process.GetProcessesByName(processName);
+
+        foreach (var process in processes)
+        {
+            if (process.Id != Environment.ProcessId)
+            {
+                process.Kill();
+            }
+        }
+
+        tools.SetProcessAppUserModelId();
+        if (firstRun) MessageBox.Show("Thanks for installing The Grammar!", "Installed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
 }
