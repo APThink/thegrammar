@@ -47,7 +47,7 @@ jobs:
         
     - name: Squirrel Pack
       run: |
-        Squirrel --packId "TheGrammar" --packVersion "1.1.3" --packDirectory "publish" --framework net7.0
+        $env:USERPROFILE + "\.nuget\packages\clowd.squirrel\2.11.1\tools\Squirrel.exe --packId "TheGrammar" --packVersion "1.1.3" --packDirectory "publish" --framework net7.0
         dir
         cd Release
         dir
