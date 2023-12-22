@@ -57,7 +57,7 @@ jobs:
       run: |
         Set-Alias Squirrel ($env:USERPROFILE + "\.nuget\packages\clowd.squirrel\2.11.1\tools\Squirrel.exe");
         Squirrel pack --packId "TheGrammar" --framework net7.0  --packVersion ${{ steps.extract_version.outputs.app_version }} --packDirectory "publish"
-        Compress-Archive -Path "Releases/*" -DestinationPath "Squirrel.zip"
+        Compress-Archive -Path "Releases/*" -DestinationPath "Squirrel_${{ steps.extract_version.outputs.app_version }}.zip"
         
     - name: Zip the Application
       run: Compress-Archive -Path publish/* -DestinationPath "TheGrammar_${{ steps.extract_version.outputs.app_version }}.zip"
@@ -89,6 +89,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./Squirrel.zip
-        asset_name: Squirrel.zip
+        asset_path: "./Squirrel_${{ steps.extract_version.outputs.app_version }}.zip"
+        asset_name: "Squirrel_${{ steps.extract_version.outputs.app_version }}.zip"
         asset_content_type: application/zip
