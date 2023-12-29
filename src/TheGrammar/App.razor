@@ -1,0 +1,20 @@
+﻿@inject NavigationManager NavManager
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="@typeof(MainLayout)">
+
+            <div class="position-center-of-screen">
+                <MudText Align="Align.Center">
+                 Not found
+                    </MudText>
+                <MudText Align="Align.Center">@NavManager.Uri</MudText>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>
