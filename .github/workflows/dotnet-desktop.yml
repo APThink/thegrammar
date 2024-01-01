@@ -44,7 +44,7 @@ jobs:
       id: extract_version
       shell: pwsh
       run: |
-        [xml]$csproj = Get-Content TheGrammar/TheGrammar.csproj
+        [xml]$csproj = Get-Content src/TheGrammar/TheGrammar.csproj
         $version = $csproj.Project.PropertyGroup.Version
         echo "Extracted Version: $version"
         echo "::set-output name=app_version::$version"
