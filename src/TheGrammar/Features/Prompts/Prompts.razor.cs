@@ -25,7 +25,7 @@ public partial class Prompts
     {
         var parameters = new DialogParameters<AddPromptDialog> { };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
-        //DialogService.Show<AddPromptDialog>("Add New Prompt", parameters, options);
+        DialogService.Show<AddPromptDialog>("Add New Prompt", parameters, options);
         await LoadPrompts();
     }
 }
