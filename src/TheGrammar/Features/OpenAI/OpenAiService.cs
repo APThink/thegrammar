@@ -76,8 +76,7 @@ public class OpenAiService
             return new OpenApiResult
             {
                 OriginalText = input,
-                //Todo: make it configurable
-                ModifiedText = $"{response} *",
+                ModifiedText = response,
                 ChatVersion = _chatVersionState.GetCurrentChatVersion()
             };
         }

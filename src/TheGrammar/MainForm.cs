@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System.Reflection;
 using TheGrammar.Features.HotKeys.Services;
+using TheGrammar.Features.HotKeys.Events;
 
 namespace TheGrammar;
 
@@ -12,13 +13,22 @@ public partial class MainForm : Form
     private readonly NotifyIcon _trayIcon;
     private readonly ContextMenuStrip _trayMenu;
     private readonly HotKeyListener _globalHotKeyHandler;
+    private Icon[] animationFrames;
+    private System.Windows.Forms.Timer animationTimer;
+    private int currentFrameIndex;
+    private IDisposable? subscription1;
+    private IDisposable? subscription2;
+
+
 
     private readonly nint _globalKeyHandlerHookId;
     public MainForm(IHost app)
     {
         InitializeComponent();
 
-        blazorWebView1.HostPage = "wwwroot\\index.html";
+        var hostPage = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot\\index.html");
+
+        blazorWebView1.HostPage = hostPage;
         blazorWebView1.Services = app.Services;
         blazorWebView1.RootComponents.Add<App>("#app");
 
@@ -31,16 +41,51 @@ public partial class MainForm : Form
         _trayMenu.Items.Add("DevTools", null, OnDevTool!);
         _trayMenu.Items.Add("Exit", null, OnExit!);
 
+        
         _trayIcon = new NotifyIcon
         {
             Text = "The Grammar App",
-            Icon = new Icon("logo.ico", 40, 40),
+            Icon = new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo.ico"), 40, 40),
             ContextMenuStrip = _trayMenu,
             Visible = true,
         };
 
+        // Load your animation frames
+        animationFrames = new Icon[]
+        {
+            new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh0.ico"), 128, 128),
+            new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh1.ico"), 128, 128),
+            new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh2.ico"), 128, 128),
+            new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh3.ico"), 128, 128),
+            new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh4.ico"), 128, 128),
+            new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh5.ico"), 128, 128),
+            new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh6.ico"), 128, 128),
+            new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh7.ico"), 128, 128),
+        };
+        currentFrameIndex = 0;
+
+        animationTimer = new System.Windows.Forms.Timer
+        {
+            Interval = 150
+        };
+
+        animationTimer.Tick += AnimationTimer_Tick!;
+
         _trayIcon.MouseDoubleClick += TrayIcon_MouseDoubleClick!;
+
+        var processInputEventService = app.Services.GetRequiredService<IProcessInputEventService>();
+        subscription1 = processInputEventService.ProcessStartEvents.Subscribe(_ =>
+        {
+            StartAnimation();
+        });
+
+        subscription2 = processInputEventService.ProcessFinishEvents.Subscribe(_ =>
+        {
+            StopAnimation();
+        });
+
     }
+
     private void OnDevTool(object sender, EventArgs e)
     {
         if (blazorWebView1.WebView.CoreWebView2 is null)
@@ -96,5 +141,29 @@ public partial class MainForm : Form
         }
 
         HotKeyListener.UnhookWindowsHookEx(_globalKeyHandlerHookId);
+    }
+
+
+    private void StartAnimation()
+    {
+        animationTimer.Start();
+    }
+
+    private void StopAnimation()
+    {
+        animationTimer.Stop();
+        _trayIcon.Icon = new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo.ico"), 128, 128);
+    }
+
+    private void AnimationTimer_Tick(object sender, EventArgs e)
+    {
+        _trayIcon.Icon = animationFrames[currentFrameIndex];
+        currentFrameIndex = (currentFrameIndex + 1) % animationFrames.Length;
+    }
+
+    private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+    {
+        subscription1!.Dispose();
+        subscription2!.Dispose();
     }
 }

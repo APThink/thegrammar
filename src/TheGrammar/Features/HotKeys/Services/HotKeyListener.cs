@@ -63,6 +63,6 @@ public class HotKeyListener
     public void ModifyClipboardTextAsync(string prompt)
     {
         var userInput = Clipboard.GetText();
-        _processInputEventService.TriggerEvent(new UserInput(userInput, prompt));
+        _processInputEventService.TrigerProcessStart(new ProcessStartDto(userInput, prompt));
     }
 }

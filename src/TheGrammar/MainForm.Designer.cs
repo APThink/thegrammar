@@ -55,6 +55,7 @@
             Text = "TheGrammar";
             WindowState = FormWindowState.Minimized;
             FormClosing += Main_FormClosing;
+            FormClosed += MainForm_FormClosed;
             Load += Main_Load;
             Resize += Main_Resize;
             ResumeLayout(false);

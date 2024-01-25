@@ -1,5 +1,4 @@
-﻿using TheGrammar.Features.OpenAI;
-
+﻿
 namespace TheGrammar.Domain;
 
 public class Request : AuditableEntity

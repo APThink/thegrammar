@@ -1,41 +1,53 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Reactive.Linq;
 using TheGrammar.Database;
 using TheGrammar.Domain;
 using TheGrammar.Features.HotKeys.Events;
 using TheGrammar.Features.OpenAI;
+using TheGrammar.Features.Settings;
 
 namespace TheGrammar.Features.HotKeys.Services;
 
 public class InputProcessingManager : BackgroundService
 {
+    private SettingsOption _settingsOption;
+
     private readonly IProcessInputEventService _processService;
-    private readonly OpenAiService _openAiService;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
-    private readonly HotKeyPressedNotification _pushService;
     private readonly ILogger<InputProcessingManager> _logger;
 
-    public InputProcessingManager(IProcessInputEventService processService,
+    private readonly OpenAiService _openAiService;
+
+    public InputProcessingManager(
+        IProcessInputEventService processService,
         OpenAiService openAiService,
         IDbContextFactory<ApplicationDbContext> dbContextFactory,
-        HotKeyPressedNotification pushService, ILogger<InputProcessingManager> logger)
+        ILogger<InputProcessingManager> logger,
+        IOptionsMonitor<SettingsOption> settingsMonitor)
     {
         _processService = processService;
         _openAiService = openAiService;
         _dbContextFactory = dbContextFactory;
-        _pushService = pushService;
         _logger = logger;
+
+        _settingsOption = settingsMonitor.CurrentValue;
+        settingsMonitor.OnChange(settings =>
+        {
+            _settingsOption = settings;
+        });
     }
+
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _processService.Events.SelectMany(ProccessTheUserInputAsync).Subscribe(
+        _processService.ProcessStartEvents.SelectMany(ProccessTheUserInputAsync).Subscribe(
         async result =>
         {
             SetClipboardText(result.ModifiedText);
             await SaveRequest(result).ConfigureAwait(false);
-            SendUserInputProcessedPushNotification(result);
+            SendProcessFinishNotification(result);
         },
         error =>
         {
@@ -45,9 +57,13 @@ public class InputProcessingManager : BackgroundService
         return Task.CompletedTask;
     }
 
-    private async Task<OpenApiResult> ProccessTheUserInputAsync(UserInput pushDto)
+    private async Task<OpenApiResult> ProccessTheUserInputAsync(ProcessStartDto pushDto)
     {
-        System.Media.SystemSounds.Exclamation.Play();
+        if (_settingsOption.PlaySoundOnProcessStart)
+        {
+            System.Media.SystemSounds.Exclamation.Play();
+        }
+
         var result = await _openAiService.ProcessAsync(pushDto.Prompt, pushDto.Input).ConfigureAwait(false);
         return result;
     }
@@ -58,6 +74,11 @@ public class InputProcessingManager : BackgroundService
         {
             try
             {
+                if(_settingsOption.AddAsteriskAtTheEndOfResponse)
+                {
+                    modifiedText += " *";
+                }
+
                 Clipboard.SetText(modifiedText);
             }
             catch (Exception ex)
@@ -86,15 +107,13 @@ public class InputProcessingManager : BackgroundService
         await context.SaveChangesAsync();
     }
 
-    private void SendUserInputProcessedPushNotification(OpenApiResult openApiResult)
+    private void SendProcessFinishNotification(OpenApiResult openApiResult)
     {
-        var pushDto = new HotKeyPressedNotificationDto
-        {
-            OriginalText = openApiResult.OriginalText,
-            ModifiedText = openApiResult.ModifiedText,
-            ChatVersion = openApiResult.ChatVersion
-        };
+        var processFinishDto = new ProcessFinishDto(
+            OriginalText: openApiResult.OriginalText,
+            ModifiedText: openApiResult.ModifiedText,
+            ChatVersion: openApiResult.ChatVersion);
 
-        _pushService.TriggerEvent(pushDto);
+        _processService.TrigerProcessFinish(processFinishDto);
     }
 }

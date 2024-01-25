@@ -1,25 +1,37 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using TheGrammar.Domain;
 
 namespace TheGrammar.Features.HotKeys.Events;
 
-public record UserInput(string Input, string Prompt);
+public record ProcessStartDto(string Input, string Prompt);
+public record ProcessFinishDto(string OriginalText, string ModifiedText, ChatVersion? ChatVersion);
+
 
 public interface IProcessInputEventService
 {
-    IObservable<UserInput> Events { get; }
+    IObservable<ProcessStartDto> ProcessStartEvents { get; }
+    void TrigerProcessStart(ProcessStartDto processStart);
 
-    void TriggerEvent(UserInput userInput);
+    IObservable<ProcessFinishDto> ProcessFinishEvents { get; }
+    void TrigerProcessFinish(ProcessFinishDto processFinish);
 }
 
 public class ProcessInputEventService : IProcessInputEventService
 {
-    private readonly ISubject<UserInput> _eventStream = new Subject<UserInput>();
+    private readonly ISubject<ProcessStartDto> _processStartEventStream = new ReplaySubject<ProcessStartDto>(1);
+    public IObservable<ProcessStartDto> ProcessStartEvents => _processStartEventStream.AsObservable();
 
-    public IObservable<UserInput> Events => _eventStream.AsObservable();
+    private readonly ISubject<ProcessFinishDto> _processFinisEventStream = new ReplaySubject<ProcessFinishDto>(1);
+    public IObservable<ProcessFinishDto> ProcessFinishEvents => _processFinisEventStream.AsObservable();
 
-    public void TriggerEvent(UserInput userInput)
+    public void TrigerProcessStart(ProcessStartDto processStart)
     {
-        _eventStream.OnNext(userInput);
+        _processStartEventStream.OnNext(processStart);
+    }
+
+    public void TrigerProcessFinish(ProcessFinishDto processFinish)
+    {
+        _processFinisEventStream.OnNext(processFinish);
     }
 }

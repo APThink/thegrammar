@@ -2,32 +2,32 @@
 using Microsoft.EntityFrameworkCore;
 using TheGrammar.Database;
 using MudBlazor;
-using TheGrammar.Features.HotKeys.Services;
+using TheGrammar.Features.HotKeys.Events;
 
 namespace TheGrammar.Features.Dashboard;
 
 public partial class Index : IDisposable
 {
-    [Inject] public HotKeyPressedNotification PushService { get; set; } = null!;
+    [Inject] public IProcessInputEventService IProcessInputEventService { get; set; } = null!;
     [Inject] public IDbContextFactory<ApplicationDbContext> DbContextFactory { get; set; } = null!;
 
     private IDisposable? subscription;
 
-    private List<HotKeyPressedNotificationDto> messages = new();
+    private List<ProcessFinishDto> messages = new();
     private MudTextField<string>? multilineReference;
 
     private int requestCount;
 
     protected override async Task OnInitializedAsync()
     {
-        subscription = PushService.Events.Subscribe(OnEventReceived);
+        subscription = IProcessInputEventService.ProcessFinishEvents.Subscribe(OnEventReceived);
         await CountRequestAsync();
         await GetLastTenRequestsAsync();
     }
 
-    private void OnEventReceived(HotKeyPressedNotificationDto pushDto)
+    private void OnEventReceived(ProcessFinishDto processFinishDto)
     {
-        messages.Insert(0, pushDto);
+        messages.Insert(0, processFinishDto);
 
         // Remove the oldest element if there are more than 10 elements in the list
         if (messages.Count > 10)
@@ -55,12 +55,7 @@ public partial class Index : IDisposable
 
         foreach (var request in requests)
         {
-            messages.Insert(0, new HotKeyPressedNotificationDto
-            {
-                OriginalText = request.RequestText,
-                ModifiedText = request.ResponseText,
-                ChatVersion = request.ChatVersion
-            });
+            messages.Insert(0, new ProcessFinishDto(OriginalText: request.RequestText, ModifiedText: request.ResponseText, ChatVersion: request.ChatVersion));
         }
     }
 

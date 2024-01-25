@@ -12,6 +12,28 @@
             }
         </MudSelect> 
         <MudTextField @bind-Value="_apiKey" Label="Open API Key" Variant="Variant.Text" Clearable="true" Immediate="true" />
+
+        <MudSwitch 
+            T="bool" 
+            Value="@_settingsOption.AutoStartEnabled" 
+            Color="Color.Secondary" 
+            Label="Auto-Start Enabled (The app should be restarted)"
+            ValueChanged="OnAutoStartChanged" />
+        
+        <MudSwitch 
+            T="bool" 
+            Value="@_settingsOption.PlaySoundOnProcessStart" 
+            Color="Color.Secondary" 
+            Label="Play Sound on Process Start"
+            ValueChanged="OnPlaySoundOnProcessStartChanged" />
+
+        <MudSwitch 
+            T="bool" 
+            Value="_settingsOption.AddAsteriskAtTheEndOfResponse" 
+            Color="Color.Secondary" 
+            Label="Add Asterisk at the End of Response*"
+            ValueChanged="OnAddAsteriskAtTheEndOfResponseChanged" />
+    
     </MudCardContent>
     <MudCardActions>
         <MudButton Variant="Variant.Filled" OnClick="SaveButtonClickHandler" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Secondary" Size="Size.Large">Save</MudButton>

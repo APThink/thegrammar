@@ -9,17 +9,20 @@ namespace TheGrammar.Features.Settings;
 public partial class Settings
 {
     private string _apiKey = string.Empty;
+    private SettingsOption _settingsOption = new();
+    public bool Label_Switch3 { get; set; } = true;
 
     [Inject] public IOptionsSnapshot<OpenAiOptions> OpenApiSnapshot { get; set; } = null!;
-
+    [Inject] public IOptionsSnapshot<SettingsOption> SettingsOptionSnapshot { get; set; } = null!;
     [Inject] public ISnackbar Snackbar { get; set; } = null!;
-
     [Inject] public ChatVersionState ChatVersionState { get; set; } = null!;
-
 
     protected override void OnInitialized()
     {
         _apiKey = OpenApiSnapshot.Value.ApiKey;
+        _settingsOption = SettingsOptionSnapshot.Value;
+
+        StateHasChanged();
         base.OnInitialized();
     }
 
@@ -46,5 +49,22 @@ public partial class Settings
     public void OnSelectedChatVersionChanged(ChatVersion chatVersion)
     {
         ChatVersionState.SetCurrentModel(chatVersion);
+    }
+    public void OnAutoStartChanged(bool shouldAutoStart)
+    {
+        _settingsOption.AutoStartEnabled = shouldAutoStart;
+        SettingsOption.UpdateSettings(nameof(SettingsOption.AutoStartEnabled), shouldAutoStart);   
+    }
+
+    public void OnPlaySoundOnProcessStartChanged(bool shouldPlaySoundOnProcessStart)
+    {
+        _settingsOption.PlaySoundOnProcessStart = shouldPlaySoundOnProcessStart;
+        SettingsOption.UpdateSettings(nameof(SettingsOption.PlaySoundOnProcessStart), shouldPlaySoundOnProcessStart);
+    }
+
+    public void OnAddAsteriskAtTheEndOfResponseChanged(bool shouldAddAsteriskAtTheEndOfResponse)
+    {
+        _settingsOption.AddAsteriskAtTheEndOfResponse = shouldAddAsteriskAtTheEndOfResponse;
+        SettingsOption.UpdateSettings(nameof(SettingsOption.AddAsteriskAtTheEndOfResponse), shouldAddAsteriskAtTheEndOfResponse);
     }
 }

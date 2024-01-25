@@ -8,6 +8,7 @@ using TheGrammar.Database;
 using MudBlazor.Services;
 using Squirrel;
 using Serilog;
+using TheGrammar.Features.Settings;
 
 namespace TheGrammar;
 internal static class Program
@@ -41,8 +42,11 @@ internal static class Program
         ApplicationConfiguration.Initialize();
 
         var builder = Host.CreateApplicationBuilder();
+       
+        builder.Configuration
+            .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
-        builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
         builder.Environment.ApplicationName = "The Grammar";
 
         builder.Services.AddWindowsFormsBlazorWebView();
@@ -51,10 +55,13 @@ internal static class Program
         builder.Services.AddHotKeys();
         builder.Services.AddOpenAI(builder.Configuration);
         builder.Services.AddDatabase(builder.Configuration);
+        builder.Services.AddSettings(builder.Configuration);
 
         builder.Services.AddScoped<PromptRepository>();
 
         var app = builder.Build();
+
+        app.SetAutoStart();
 
         app.SeedDbAsync().Wait();
 
@@ -74,9 +81,10 @@ internal static class Program
 
     private static void InitLogger()
     {
+        var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs/TheGrammar.txt");
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .WriteTo.File("Logs/TheGrammar.txt", rollingInterval: RollingInterval.Month)
+            .WriteTo.File(logPath, rollingInterval: RollingInterval.Month)
             .CreateLogger();
     }
 }

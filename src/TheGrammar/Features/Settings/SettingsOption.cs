@@ -1,15 +1,17 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json;
 
-namespace TheGrammar.Features.OpenAI;
+namespace TheGrammar.Features.Settings;
 
-public class OpenAiOptions
+public class SettingsOption
 {
-    public const string SectionName = "OpenApi";
-    public required string ApiKey { get; set; }
-    public required int MaxTokenResponse { get; set; }
+    public const string SectionName = "SettingsOption";
 
-    public static void UpdateApiKey(string apiKey)
+    public bool AutoStartEnabled { get; set; }
+    public bool PlaySoundOnProcessStart { get; set; }
+    public bool AddAsteriskAtTheEndOfResponse { get; set; }
+
+    public static void UpdateSettings(string propertyName, bool value)
     {
         var appSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
 
@@ -21,8 +23,9 @@ public class OpenAiOptions
             jsonObject[SectionName] = new JsonObject();
         }
 
-        var apiKeyNode = jsonObject[SectionName] ?? throw new Exception("appsettings.json is not contain openapi section");
-        apiKeyNode[nameof(ApiKey)] = apiKey;
+        var settingsNode = jsonObject[SectionName] as JsonObject ?? throw new Exception($"appsettings.json does not contain the {SectionName} section");
+
+        settingsNode[propertyName] = value;
 
         jsonString = jsonObject.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(appSettingsPath, jsonString);

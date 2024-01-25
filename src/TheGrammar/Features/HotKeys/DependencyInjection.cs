@@ -13,7 +13,6 @@ public static class DependencyInjection
 
         services.AddHostedService<InputProcessingManager>();
 
-        services.AddSingleton<HotKeyPressedNotification>();
         services.AddSingleton<IProcessInputEventService, ProcessInputEventService>();
 
         return services;
