@@ -13,7 +13,7 @@ public partial class AddPromptDialog
     private string _prompt = "Hello World";
 
     [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
-    [CascadingParameter]  public PromptRepository PromptRepository { get; set; } = null!;
+    [Inject]  public PromptRepository PromptRepository { get; set; } = null!;
     [Inject] public ISnackbar Snackbar { get; set; } = null!;
     [Inject] public IGlobalKeyBindingState KeyBindingState { get; set; } = null!;
 
