@@ -59,7 +59,7 @@ public class OpenAiService
         _chatVersionState = chatVersionState;
     }
 
-    public async Task<OpenApiResult> ProcessAsync(string promt, string input)
+    public async Task<OpenApiResult> ProcessAsync(string promt, string input, CancellationToken cancellationToken)
     {
         try
         {
