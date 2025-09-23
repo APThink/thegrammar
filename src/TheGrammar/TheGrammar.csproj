@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
 	  <Product>TheGrammar</Product>
-	  <Version>1.1.9</Version>
+	  <Version>1.1.10</Version>
 	  <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
@@ -94,6 +94,9 @@
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Update="Assets\logo.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
