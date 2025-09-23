@@ -39,13 +39,13 @@ public partial class MainForm : Form
 
     _trayMenu = new ContextMenuStrip();
     _trayMenu.Items.Add("DevTools", null, OnDevTool!);
-    _trayMenu.Items.Add("Exit", null, OnExit!);
     _trayMenu.Items.Add("Cancel Request", null, OnCancel!);
+    _trayMenu.Items.Add("Exit", null, OnExit!);
 
     _trayIcon = new NotifyIcon
     {
       Text = "The Grammar App",
-      Icon = new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo.ico"), 40, 40),
+      Icon = new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "logo.ico"), 40, 40),
       ContextMenuStrip = _trayMenu,
       Visible = true,
     };
@@ -150,7 +150,7 @@ public partial class MainForm : Form
   private void StopAnimation()
   {
     animationTimer.Stop();
-    _trayIcon.Icon = new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo.ico"), 128, 128);
+    _trayIcon.Icon = new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "logo.ico"), 128, 128);
   }
 
   private void AnimationTimer_Tick(object sender, EventArgs e)
