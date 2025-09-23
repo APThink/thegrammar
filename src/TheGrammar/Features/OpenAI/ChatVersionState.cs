@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Microsoft.Extensions.Options;
+using Serilog;
 using TheGrammar.Domain;
 
 namespace TheGrammar.Features.OpenAI;
@@ -9,7 +10,7 @@ public class ChatVersionState
 
   public ChatModelSettings Current { get; private set; }
 
-  public ChatVersionState()
+  public ChatVersionState(IOptions<OpenAiOptions> options)
   {
     _configs = new Dictionary<ChatVersion, ChatModelSettings>
     {
@@ -54,8 +55,9 @@ public class ChatVersionState
         )
       },
     };
-
-    Current = _configs[ChatVersion.Gpt4o];
+    
+    var defaultModel = options.Value.DefaultModel;
+    Current = _configs.TryGetValue(defaultModel, out var settings) ? settings : _configs[ChatVersion.Gpt4o];
   }
 
   public void SetCurrentModel(ChatVersion chatVersion)
