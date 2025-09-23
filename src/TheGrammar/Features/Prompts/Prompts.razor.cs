@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using OpenAI_API.Moderation;
 using TheGrammar.Domain;
 using TheGrammar.Features.Prompts.Components;
 

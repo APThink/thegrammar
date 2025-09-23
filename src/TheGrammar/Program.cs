@@ -53,7 +53,7 @@ internal static class Program
         builder.Services.AddMudServices();
 
         builder.Services.AddHotKeys();
-        builder.Services.AddOpenAI(builder.Configuration);
+        builder.Services.AddOpenAi(builder.Configuration);
         builder.Services.AddDatabase(builder.Configuration);
         builder.Services.AddSettings(builder.Configuration);
 

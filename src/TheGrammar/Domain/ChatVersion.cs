@@ -4,8 +4,8 @@ namespace TheGrammar.Domain;
 
 public enum ChatVersion
 {
-    [Description("3.5 Turbo")]
-    Turbo35,
-    [Description("4 Turbo")]
-    Turbo4
+  [Description("GPT-5")] Gpt5,
+  [Description("GPT-5 Nano")] Gpt5Nano,
+  [Description("GPT-4 Turbo")] Turbo4,
+  [Description("GPT-4o")] Gpt4o,
 }
