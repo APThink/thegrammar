@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
 using TheGrammar.Features.OpenAI;
-using TheGrammar.Domain;
 using MudBlazor;
 
 namespace TheGrammar.Features.Settings;
@@ -45,10 +44,10 @@ public partial class Settings
     }
   }
 
-  public void OnSelectedChatVersionChanged(ChatVersion chatVersion)
+  public void OnSelectedModelChanged(string modelKey)
   {
-    ChatVersionState.SetCurrentModel(chatVersion); 
-    OpenAiOptions.UpdateDefaultModel(chatVersion);
+    ChatVersionState.SetCurrentModel(modelKey);
+    OpenAiOptions.UpdateDefaultModel(modelKey);
   }
 
   public void OnAutoStartChanged(bool shouldAutoStart)

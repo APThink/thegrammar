@@ -1,6 +1,5 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Text.Json.Nodes;
-using TheGrammar.Domain;
 
 namespace TheGrammar.Features.OpenAI;
 
@@ -10,7 +9,7 @@ public class OpenAiOptions
 
   public required string ApiKey { get; init; }
   public required int MaxTokenResponse { get; init; }
-  public required ChatVersion DefaultModel { get; init; }
+  public required string DefaultModel { get; init; }
 
   private static string AppSettingsPath =>
     Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
@@ -57,11 +56,11 @@ public class OpenAiOptions
     SaveJson(root);
   }
 
-  public static void UpdateDefaultModel(ChatVersion model)
+  public static void UpdateDefaultModel(string modelKey)
   {
     var root = LoadJson();
     var section = GetOrCreateSection(root);
-    section[nameof(DefaultModel)] = model.ToString();
+    section[nameof(DefaultModel)] = modelKey;
     SaveJson(root);
   }
 }

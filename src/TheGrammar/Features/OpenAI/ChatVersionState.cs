@@ -1,79 +1,61 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Serilog;
+using TheGrammar.Database;
 using TheGrammar.Domain;
 
 namespace TheGrammar.Features.OpenAI;
 
 public class ChatVersionState
 {
-  private readonly Dictionary<ChatVersion, ChatModelSettings> _configs;
+  private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+  private readonly string _defaultModelKey;
+  private string? _currentModelKey;
 
-  public ChatModelSettings Current { get; private set; }
-
-  public ChatVersionState(IOptions<OpenAiOptions> options)
+  public ChatVersionState(IDbContextFactory<ApplicationDbContext> dbContextFactory, IOptions<OpenAiOptions> options)
   {
-    _configs = new Dictionary<ChatVersion, ChatModelSettings>
-    {
-      {
-        ChatVersion.Gpt5,
-        new ChatModelSettings(
-          "gpt-5",
-          Temperature: null,
-          TopP: 1.0f,
-          FrequencyPenalty: 0.0f,
-          PresencePenalty: 0.0f
-        )
-      },
-      {
-        ChatVersion.Gpt5Nano,
-        new ChatModelSettings(
-          "gpt-5-nano",
-          Temperature: null,
-          TopP: 1.0f,
-          FrequencyPenalty: 0.0f,
-          PresencePenalty: 0.0f
-        )
-      },
-      {
-        ChatVersion.Turbo4,
-        new ChatModelSettings(
-          "gpt-4",
-          Temperature: 0.0f,
-          TopP: 1.0f,
-          FrequencyPenalty: 0.0f,
-          PresencePenalty: 0.0f
-        )
-      },
-      {
-        ChatVersion.Gpt4o,
-        new ChatModelSettings(
-          "gpt-4o",
-          Temperature: 0.0f,
-          TopP: 1.0f,
-          FrequencyPenalty: 0.0f,
-          PresencePenalty: 0.0f
-        )
-      },
-    };
-    
-    var defaultModel = options.Value.DefaultModel;
-    Current = _configs.TryGetValue(defaultModel, out var settings) ? settings : _configs[ChatVersion.Gpt4o];
+    _dbContextFactory = dbContextFactory;
+    _defaultModelKey = options.Value.DefaultModel;
   }
 
-  public void SetCurrentModel(ChatVersion chatVersion)
+  public Model CurrentModel
   {
-    if (_configs.TryGetValue(chatVersion, out var settings))
+    get
     {
-      Current = settings;
+      using var dbContext = _dbContextFactory.CreateDbContext();
+      var key = _currentModelKey ?? _defaultModelKey;
+      return dbContext.Models.FirstOrDefault(m => m.Key == key)
+             ?? dbContext.Models.First();
+    }
+  }
+
+  public ChatModelSettings Current => new(
+    CurrentModel.ModelName,
+    CurrentModel.Temperature,
+    CurrentModel.TopP,
+    CurrentModel.FrequencyPenalty,
+    CurrentModel.PresencePenalty
+  );
+
+  public List<Model> GetAllModels()
+  {
+    using var dbContext = _dbContextFactory.CreateDbContext();
+    return dbContext.Models.ToList();
+  }
+
+  public void SetCurrentModel(string modelKey)
+  {
+    using var dbContext = _dbContextFactory.CreateDbContext();
+    var model = dbContext.Models.FirstOrDefault(m => m.Key == modelKey);
+    if (model != null)
+    {
+      _currentModelKey = modelKey;
     }
     else
     {
-      Log.Error("Failed to set current deployment/model for ChatVersion {ChatVersion}", chatVersion);
+      Log.Error("Failed to set current model for key {ModelKey}", modelKey);
     }
   }
 
-  public ChatVersion GetCurrentChatVersion()
-  {
-    return _configs.FirstOrDefault(x => x.Value == Current).Key;
-  }
+  public string GetCurrentModelKey() => _currentModelKey ?? _defaultModelKey;
 }

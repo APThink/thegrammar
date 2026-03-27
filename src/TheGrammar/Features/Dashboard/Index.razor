@@ -35,9 +35,9 @@
                 <MudListItem Icon="@Icons.Material.Filled.ArrowRightAlt" Text="@message.OriginalText" InitiallyExpanded="false">
                     <NestedList>
                         <MudListItem>
-                            <MudTextField @ref="multilineReference" 
-                                T="string" 
-                                Label="@($"Corrected Text: (Version: {message.ChatVersion.GetDescription()})")" 
+                            <MudTextField @ref="multilineReference"
+                                T="string"
+                                Label="@($"Corrected Text: (Model: {message.ModelKey ?? "Unknown"})")"
                                 Lines="4" 
                                 Variant="Variant.Outlined" 
                                 Text="@message.ModifiedText" 

@@ -1,11 +1,10 @@
-﻿using System.Reactive.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using TheGrammar.Domain;
 
 namespace TheGrammar.Features.HotKeys.Events
 {
   public record ProcessStartDto(string Input, string Prompt);
-  public record ProcessFinishDto(string OriginalText, string ModifiedText, ChatVersion? ChatVersion);
+  public record ProcessFinishDto(string OriginalText, string ModifiedText, string? ModelKey);
   public record ProcessCancellationDto();
   
 

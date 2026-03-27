@@ -55,7 +55,7 @@ public partial class Index : IDisposable
 
         foreach (var request in requests)
         {
-            messages.Insert(0, new ProcessFinishDto(OriginalText: request.RequestText, ModifiedText: request.ResponseText, ChatVersion: request.ChatVersion));
+            messages.Insert(0, new ProcessFinishDto(OriginalText: request.RequestText, ModifiedText: request.ResponseText, ModelKey: request.ModelKey));
         }
     }
 

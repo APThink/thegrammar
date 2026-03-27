@@ -5,10 +5,10 @@
 
 <MudCard>
     <MudCardContent Style="display: flex; flex-direction: column; gap: 25px;">
-        <MudSelect T="ChatVersion" Label="Chat Version" HelperText="Chat Version" Value="@ChatVersionState.GetCurrentChatVersion()" ValueChanged="OnSelectedChatVersionChanged">
-            @foreach (ChatVersion chatVersion in Enum.GetValues(typeof(ChatVersion)))
+        <MudSelect T="string" Label="Model" HelperText="Select AI Model" Value="@ChatVersionState.GetCurrentModelKey()" ValueChanged="OnSelectedModelChanged">
+            @foreach (var model in ChatVersionState.GetAllModels())
             {
-                <MudSelectItem Value="@chatVersion">@chatVersion.GetDescription()</MudSelectItem>
+                <MudSelectItem Value="@model.Key">@model.DisplayName</MudSelectItem>
             }
         </MudSelect> 
         <MudTextField @bind-Value="_apiKey" Label="Open API Key" Variant="Variant.Text" Clearable="true" Immediate="true" />

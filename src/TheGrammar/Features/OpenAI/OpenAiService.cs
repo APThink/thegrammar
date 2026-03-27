@@ -37,7 +37,7 @@ public class OpenAiService
         .Select(c => c.Text.Trim())
         .LastOrDefault() ?? userInput;
 
-      return new OpenApiResult(userInput, modified, _chatVersionState.GetCurrentChatVersion());
+      return new OpenApiResult(userInput, modified, _chatVersionState.GetCurrentModelKey());
     }
     catch (TaskCanceledException)
     {

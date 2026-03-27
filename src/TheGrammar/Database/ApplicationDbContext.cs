@@ -8,6 +8,7 @@ public class ApplicationDbContext : DbContext
 {
     public DbSet<Prompt> Prompts { get; set; } = null!;
     public DbSet<Request> Requests { get; set; } = null!;
+    public DbSet<Model> Models { get; set; } = null!;
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
