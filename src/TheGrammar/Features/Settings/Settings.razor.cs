@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
 using TheGrammar.Features.OpenAI;
+using TheGrammar.Features.Settings.Components;
 using MudBlazor;
 
 namespace TheGrammar.Features.Settings;
@@ -14,6 +15,8 @@ public partial class Settings
   [Inject] public IOptionsSnapshot<SettingsOption> SettingsOptionSnapshot { get; set; } = null!;
   [Inject] public ISnackbar Snackbar { get; set; } = null!;
   [Inject] public ChatVersionState ChatVersionState { get; set; } = null!;
+  [Inject] public IDialogService DialogService { get; set; } = null!;
+  [Inject] public ModelRepository ModelRepository { get; set; } = null!;
 
   protected override void OnInitialized()
   {
@@ -41,6 +44,18 @@ public partial class Settings
     catch (Exception)
     {
       Snackbar.Add("Failed to save", Severity.Error);
+    }
+  }
+
+  public async Task AddModel()
+  {
+    var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+    var dialogReference = DialogService.Show<AddModelDialog>("Add New Model", options);
+    var result = await dialogReference.Result;
+
+    if (result is { Canceled: false, Data: true })
+    {
+      StateHasChanged();
     }
   }
 

@@ -58,6 +58,7 @@ internal static class Program
         builder.Services.AddSettings(builder.Configuration);
 
         builder.Services.AddScoped<PromptRepository>();
+        builder.Services.AddScoped<ModelRepository>();
 
         var app = builder.Build();
 
