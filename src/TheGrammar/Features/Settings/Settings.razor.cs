@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
 using TheGrammar.Features.OpenAI;
-using TheGrammar.Domain;
+using TheGrammar.Features.Settings.Components;
 using MudBlazor;
 
 namespace TheGrammar.Features.Settings;
@@ -15,6 +15,8 @@ public partial class Settings
   [Inject] public IOptionsSnapshot<SettingsOption> SettingsOptionSnapshot { get; set; } = null!;
   [Inject] public ISnackbar Snackbar { get; set; } = null!;
   [Inject] public ChatVersionState ChatVersionState { get; set; } = null!;
+  [Inject] public IDialogService DialogService { get; set; } = null!;
+  [Inject] public ModelRepository ModelRepository { get; set; } = null!;
 
   protected override void OnInitialized()
   {
@@ -45,10 +47,22 @@ public partial class Settings
     }
   }
 
-  public void OnSelectedChatVersionChanged(ChatVersion chatVersion)
+  public async Task AddModel()
   {
-    ChatVersionState.SetCurrentModel(chatVersion); 
-    OpenAiOptions.UpdateDefaultModel(chatVersion);
+    var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+    var dialogReference = DialogService.Show<AddModelDialog>("Add New Model", options);
+    var result = await dialogReference.Result;
+
+    if (result is { Canceled: false, Data: true })
+    {
+      StateHasChanged();
+    }
+  }
+
+  public void OnSelectedModelChanged(string modelKey)
+  {
+    ChatVersionState.SetCurrentModel(modelKey);
+    OpenAiOptions.UpdateDefaultModel(modelKey);
   }
 
   public void OnAutoStartChanged(bool shouldAutoStart)

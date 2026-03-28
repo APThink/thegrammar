@@ -152,7 +152,7 @@ namespace TheGrammar.Features.HotKeys.Services
       {
         RequestText = openApiResult.OriginalText,
         ResponseText = openApiResult.ModifiedText,
-        ChatVersion = openApiResult.ChatVersion
+        ModelKey = openApiResult.ModelKey
       };
       context.Requests.Add(request);
       await context.SaveChangesAsync();
@@ -163,7 +163,7 @@ namespace TheGrammar.Features.HotKeys.Services
       var processFinishDto = new ProcessFinishDto(
         OriginalText: openApiResult.OriginalText,
         ModifiedText: openApiResult.ModifiedText,
-        ChatVersion: openApiResult.ChatVersion);
+        ModelKey: openApiResult.ModelKey);
       _processService.TriggerProcessFinish(processFinishDto);
     }
 

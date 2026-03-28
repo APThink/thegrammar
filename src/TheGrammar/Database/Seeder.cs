@@ -15,6 +15,7 @@ public static class Seeder
             var context = services.GetRequiredService<ApplicationDbContext>();
             context.Database.Migrate();
             await SeedData.SeedPrompts(context);
+            await SeedData.SeedModels(context);
         }
         catch (Exception ex)
         {

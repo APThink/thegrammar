@@ -1,4 +1,4 @@
-﻿using TheGrammar.Domain;
+using TheGrammar.Domain;
 
 namespace TheGrammar.Database;
 
@@ -19,6 +19,61 @@ public class SeedData
         };
 
         dbContext.Prompts.Add(prompt);
+        await dbContext.SaveChangesAsync();
+    }
+
+    public static async Task SeedModels(ApplicationDbContext dbContext)
+    {
+        if (dbContext.Models.Any())
+        {
+            return;
+        }
+
+        var models = new List<Model>
+        {
+            new()
+            {
+                Key = "Gpt4o",
+                DisplayName = "GPT-4o",
+                ModelName = "gpt-4o",
+                Temperature = 0.0f,
+                TopP = 1.0f,
+                FrequencyPenalty = 0.0f,
+                PresencePenalty = 0.0f
+            },
+            new()
+            {
+                Key = "Gpt5",
+                DisplayName = "GPT-5",
+                ModelName = "gpt-5",
+                Temperature = null,
+                TopP = 1.0f,
+                FrequencyPenalty = 0.0f,
+                PresencePenalty = 0.0f
+            },
+            new()
+            {
+                Key = "Gpt5Nano",
+                DisplayName = "GPT-5 Nano",
+                ModelName = "gpt-5-nano",
+                Temperature = null,
+                TopP = 1.0f,
+                FrequencyPenalty = 0.0f,
+                PresencePenalty = 0.0f
+            },
+            new()
+            {
+                Key = "Turbo4",
+                DisplayName = "GPT-4 Turbo",
+                ModelName = "gpt-4",
+                Temperature = 0.0f,
+                TopP = 1.0f,
+                FrequencyPenalty = 0.0f,
+                PresencePenalty = 0.0f
+            }
+        };
+
+        dbContext.Models.AddRange(models);
         await dbContext.SaveChangesAsync();
     }
 }

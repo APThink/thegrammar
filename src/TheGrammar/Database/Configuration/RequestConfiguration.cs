@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using TheGrammar.Domain;
 
@@ -14,10 +14,7 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request>
         builder.Property(p => p.ResponseText)
             .HasMaxLength(5000);
 
-        builder.Property(p => p.ChatVersion)
-                 .HasConversion(
-                     v => v.HasValue ? v.ToString() : null,
-                     v => v == null ? null : (ChatVersion?)Enum.Parse(typeof(ChatVersion), v))
-                 .HasMaxLength(50);
+        builder.Property(p => p.ModelKey)
+            .HasMaxLength(50);
     }
 }
