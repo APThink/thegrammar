@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenAI;
 
@@ -7,7 +7,7 @@ namespace TheGrammar.Features.OpenAI;
 public static class DependencyInjection
 {
   private const string SettingsNotFoundMessage =
-    "OpenAI API settings not found. Please add them to the appsettings.json file.";
+    "OpenAI settings not found.";
 
   private const string Error = "Error";
 
@@ -25,6 +25,6 @@ public static class DependencyInjection
     }
 
     services.Configure<OpenAiOptions>(configuration.GetRequiredSection(OpenAiOptions.SectionName));
-    services.AddSingleton<OpenAIClient>(_ => new OpenAIClient(openApiSettings!.ApiKey));
+    services.AddSingleton<OpenAIClient>(_ => new OpenAIClient(ApiKeyStore.Load() ?? "sk-not-configured"));
   }
 }

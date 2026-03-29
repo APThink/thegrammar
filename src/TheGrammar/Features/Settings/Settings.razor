@@ -1,4 +1,4 @@
-﻿@page "/settings"
+@page "/settings"
 
 
 <MudText Typo="Typo.h6" Style="padding-bottom: 25px">Settings</MudText>
@@ -14,7 +14,21 @@
             </MudSelect>
             <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddModel" Title="Add new model" />
         </div>
-        <MudTextField @bind-Value="_apiKey" Label="Open API Key" Variant="Variant.Text" Clearable="true" Immediate="true" />
+        @if (_isEditingApiKey)
+        {
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <MudTextField @bind-Value="_newApiKey" Label="New API Key" Variant="Variant.Text" Immediate="true" Style="flex: 1;" />
+                <MudButton Variant="Variant.Filled" OnClick="SaveApiKeyClickHandler" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Secondary">Save & Restart</MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CancelEditApiKey" />
+            </div>
+        }
+        else
+        {
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <MudTextField Value="@MaskedApiKey" Label="Open API Key" Variant="Variant.Text" ReadOnly="true" Style="flex: 1;" />
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="StartEditApiKey" />
+            </div>
+        }
 
         <MudSwitch 
             T="bool" 

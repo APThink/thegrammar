@@ -9,7 +9,25 @@ namespace TheGrammar.Features.Settings;
 public partial class Settings
 {
   private string _apiKey = string.Empty;
+  private string _newApiKey = string.Empty;
+  private bool _isEditingApiKey;
   private SettingsOption _settingsOption = new();
+
+  private string MaskedApiKey => _apiKey.Length > 4
+    ? new string('•', _apiKey.Length - 4) + _apiKey[^4..]
+    : new string('•', _apiKey.Length);
+
+  public void StartEditApiKey()
+  {
+    _newApiKey = string.Empty;
+    _isEditingApiKey = true;
+  }
+
+  public void CancelEditApiKey()
+  {
+    _isEditingApiKey = false;
+    _newApiKey = string.Empty;
+  }
 
   [Inject] public IOptionsSnapshot<OpenAiOptions> OpenApiSnapshot { get; set; } = null!;
   [Inject] public IOptionsSnapshot<SettingsOption> SettingsOptionSnapshot { get; set; } = null!;
@@ -20,7 +38,7 @@ public partial class Settings
 
   protected override void OnInitialized()
   {
-    _apiKey = OpenApiSnapshot.Value.ApiKey;
+    _apiKey = ApiKeyStore.Load() ?? string.Empty;
     _settingsOption = SettingsOptionSnapshot.Value;
 
     StateHasChanged();
@@ -29,17 +47,25 @@ public partial class Settings
 
   public void SaveButtonClickHandler()
   {
+    Snackbar.Add("Saved", Severity.Success);
+  }
+
+  public async Task SaveApiKeyClickHandler()
+  {
     try
     {
-      if (string.IsNullOrWhiteSpace(_apiKey))
+      if (string.IsNullOrWhiteSpace(_newApiKey))
       {
         Snackbar.Add("Api key is required", Severity.Error);
         return;
       }
 
-      OpenAiOptions.UpdateApiKey(_apiKey);
+      ApiKeyStore.Save(_newApiKey);
+      Snackbar.Add("Saved. Restarting...", Severity.Success);
       StateHasChanged();
-      Snackbar.Add("Saved, if your changed the api key you need to restart the app", Severity.Success);
+
+      await Task.Delay(1500);
+      Application.Restart();
     }
     catch (Exception)
     {

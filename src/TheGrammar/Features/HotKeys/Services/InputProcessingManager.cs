@@ -86,6 +86,7 @@ namespace TheGrammar.Features.HotKeys.Services
         catch (Exception ex)
         {
           _logger.LogError(ex, "Error occurred while processing user input");
+          _processService.TriggerProcessError(new ProcessErrorDto(ex.Message));
         }
         finally
         {
