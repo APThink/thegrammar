@@ -9,86 +9,61 @@ on:
     branches: [ master ]
 
 jobs:
-  build_and_release:
+  build:
     runs-on: windows-latest
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Set color
-      id: color-selector
-      run: echo "SELECTED_COLOR=green" >> "$GITHUB_OUTPUT"
-        
-    - name: Get color
-      env:
-          SELECTED_COLOR: ${{ steps.color-selector.outputs.SELECTED_COLOR }}
-      run: echo "The selected color is $SELECTED_COLOR"
-      
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
 
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '7.0.x'
+      - name: Restore Dependencies
+        run: dotnet restore TheGrammar.sln
 
-    - name: Restore Dependencies
-      run: dotnet restore TheGrammar.sln
+      - name: Build Solution
+        run: dotnet build TheGrammar.sln --configuration Release --no-restore
 
-    - name: Build Solution
-      run: dotnet build TheGrammar.sln --configuration Release --no-restore
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
 
-    - name: Publish Application
-      run: dotnet publish TheGrammar.sln --configuration Release --no-restore --output publish
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Extract Application Version
-      id: extract_version
-      shell: pwsh
-      run: |
-        [xml]$csproj = Get-Content src/TheGrammar/TheGrammar.csproj
-        $version = $csproj.Project.PropertyGroup.Version
-        echo "Extracted Version: $version"
-        echo "::set-output name=app_version::$version"
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
 
-    - name: Use Extracted Version
-      run: |
-        echo "Version - ${{ steps.extract_version.outputs.app_version }}"
+      - name: Restore Dependencies
+        run: dotnet restore TheGrammar.sln
 
-    - name: Create Squirrel Package
-      run: |
-        Set-Alias Squirrel ($env:USERPROFILE + "\.nuget\packages\clowd.squirrel\2.11.1\tools\Squirrel.exe");
-        Squirrel pack --packId "TheGrammar" --framework net7.0  --packVersion ${{ steps.extract_version.outputs.app_version }} --packDirectory "publish"
-        Compress-Archive -Path "Releases/*" -DestinationPath "Squirrel_${{ steps.extract_version.outputs.app_version }}.zip"
-        
-    - name: Zip the Application
-      run: Compress-Archive -Path publish/* -DestinationPath "TheGrammar_${{ steps.extract_version.outputs.app_version }}.zip"
+      - name: Publish Application
+        run: dotnet publish TheGrammar.sln --configuration Release --no-restore --output publish
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name:  ${{ steps.extract_version.outputs.app_version }}
-        release_name: Release -  ${{ steps.extract_version.outputs.app_version }}
-        draft: false
-        prerelease: false
+      - name: Create Squirrel Package
+        shell: pwsh
+        run: |
+          Set-Alias Squirrel ($env:USERPROFILE + "\.nuget\packages\clowd.squirrel\2.11.1\tools\Squirrel.exe")
+          Squirrel pack --packId "TheGrammar" --framework net10.0 --packVersion ${{ github.ref_name }} --packDirectory "publish"
+          Compress-Archive -Path "Releases/*" -DestinationPath "Squirrel_${{ github.ref_name }}.zip"
 
-    - name: Upload TheGrammar Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: "./TheGrammar_${{ steps.extract_version.outputs.app_version }}.zip"
-        asset_name: "TheGrammar_${{ steps.extract_version.outputs.app_version }}.zip"
-        asset_content_type: application/zip
-        
-    - name: Upload Squirrel Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: "./Squirrel_${{ steps.extract_version.outputs.app_version }}.zip"
-        asset_name: "Squirrel_${{ steps.extract_version.outputs.app_version }}.zip"
-        asset_content_type: application/zip
+      - name: Zip the Application
+        shell: pwsh
+        run: Compress-Archive -Path publish/* -DestinationPath "TheGrammar_${{ github.ref_name }}.zip"
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release - ${{ github.ref_name }}
+          files: |
+            TheGrammar_${{ github.ref_name }}.zip
+            Squirrel_${{ github.ref_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
