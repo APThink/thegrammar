@@ -15,11 +15,10 @@
             <MudAppBar Elevation="4">
                 <MudToolBar DisableGutters="true">
                     <img src="/logo.svg" alt="The Grammar" style="height: 60px; margin-left: 8px;" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" OnClick="@((e) => DrawerToggle())" class="ml-2" />
                 </MudToolBar>
             </MudAppBar>
 
-            <MudDrawer @bind-Open="_drawerOpen" Elevation="25" ClipMode="DrawerClipMode.Always">
+            <MudDrawer Open="true" Elevation="25" ClipMode="DrawerClipMode.Always" Style="width: 72px; min-width: 72px; overflow: hidden;">
                 <NavMenu />
             </MudDrawer>
 
