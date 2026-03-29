@@ -12,6 +12,7 @@ public partial class MainForm : Form
   private readonly NotifyIcon _trayIcon;
   private readonly ContextMenuStrip _trayMenu;
   private readonly HotKeyListener _globalHotKeyHandler;
+  private readonly Icon _defaultIcon;
   private Icon[] animationFrames;
   private System.Windows.Forms.Timer animationTimer;
   private int currentFrameIndex;
@@ -43,31 +44,22 @@ public partial class MainForm : Form
     _trayMenu.Items.Add("Cancel Request", null, OnCancel!);
     _trayMenu.Items.Add("Exit", null, OnExit!);
 
+    _defaultIcon = new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "logo.ico"), 40, 40);
+
     _trayIcon = new NotifyIcon
     {
       Text = "The Grammar App",
-      Icon = new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "logo.ico"), 40, 40),
+      Icon = _defaultIcon,
       ContextMenuStrip = _trayMenu,
       Visible = true,
     };
 
-    // Load your animation frames
-    animationFrames = new Icon[]
-    {
-      new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh0.ico"), 128, 128),
-      new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh1.ico"), 128, 128),
-      new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh2.ico"), 128, 128),
-      new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh3.ico"), 128, 128),
-      new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh4.ico"), 128, 128),
-      new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh5.ico"), 128, 128),
-      new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh6.ico"), 128, 128),
-      new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets/refresh7.ico"), 128, 128),
-    };
+    animationFrames = TraySpinnerFrames.Generate();
     currentFrameIndex = 0;
 
     animationTimer = new System.Windows.Forms.Timer
     {
-      Interval = 150
+      Interval = 50
     };
 
     animationTimer.Tick += AnimationTimer_Tick!;
@@ -158,13 +150,16 @@ public partial class MainForm : Form
 
   private void StartAnimation()
   {
+    if (InvokeRequired) { Invoke(StartAnimation); return; }
+    currentFrameIndex = 0;
     animationTimer.Start();
   }
 
   private void StopAnimation()
   {
+    if (InvokeRequired) { Invoke(StopAnimation); return; }
     animationTimer.Stop();
-    _trayIcon.Icon = new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "logo.ico"), 128, 128);
+    _trayIcon.Icon = _defaultIcon;
   }
 
   private void AnimationTimer_Tick(object sender, EventArgs e)
