@@ -4,24 +4,42 @@
 <MudText Typo="Typo.h6" Style="padding-bottom: 25px">Dashboard</MudText>
 
 <MudGrid Style="padding-bottom: 25px">
-    <MudItem xs="12" sm="6">
+    <MudItem xs="12" sm="6" md="3">
         <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
-            <MudIcon Icon="@Icons.Material.Filled.RequestQuote" Color="Color.Primary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+            <MudIcon Icon="@Icons.Material.Filled.Psychology" Color="Color.Primary" Class="mx-4" Style="width:54px; height:54px;" />
             <div>
-                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Requests:</MudText>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Model</MudText>
+                <MudText Typo="Typo.h6">@currentModel</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+            <MudIcon Icon="@Icons.Material.Filled.RequestQuote" Color="Color.Primary" Class="mx-4" Style="width:54px; height:54px;" />
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Requests</MudText>
                 <MudText Typo="Typo.h6">@requestCount</MudText>
-                </div>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
-                <MudIcon Icon="@Icons.Material.Filled.Money" Color="Color.Secondary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
-                <div>
-                    <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Balance:</MudText>
-                    <MudText Typo="Typo.h6">$5,00</MudText>
-                </div>
-            </MudPaper>
-        </MudItem>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+            <MudIcon Icon="@(apiKeySet ? Icons.Material.Filled.VpnKey : Icons.Material.Filled.VpnKeyOff)" Color="@(apiKeySet ? Color.Primary : Color.Error)" Class="mx-4" Style="width:54px; height:54px;" />
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">API Key</MudText>
+                <MudText Typo="Typo.h6">@(apiKeySet ? "Set" : "Not set")</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+            <MudIcon Icon="@Icons.Material.Filled.Autorenew" Color="@(autoStartEnabled ? Color.Primary : Color.Default)" Class="mx-4" Style="width:54px; height:54px;" />
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Auto-Start</MudText>
+                <MudText Typo="Typo.h6">@(autoStartEnabled ? "On" : "Off")</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
 </MudGrid>
 
 

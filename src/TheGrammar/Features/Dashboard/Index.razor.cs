@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TheGrammar.Database;
 using MudBlazor;
 using TheGrammar.Features.HotKeys.Events;
+using TheGrammar.Features.OpenAI;
+using TheGrammar.Features.Settings;
 
 namespace TheGrammar.Features.Dashboard;
 
@@ -10,6 +13,8 @@ public partial class Index : IDisposable
 {
     [Inject] public IProcessInputEventService IProcessInputEventService { get; set; } = null!;
     [Inject] public IDbContextFactory<ApplicationDbContext> DbContextFactory { get; set; } = null!;
+    [Inject] public ChatVersionState ChatVersionState { get; set; } = null!;
+    [Inject] public IOptionsSnapshot<SettingsOption> SettingsOptionSnapshot { get; set; } = null!;
 
     private IDisposable? subscription;
 
@@ -17,10 +22,16 @@ public partial class Index : IDisposable
     private MudTextField<string>? multilineReference;
 
     private int requestCount;
+    private string currentModel = string.Empty;
+    private bool apiKeySet;
+    private bool autoStartEnabled;
 
     protected override async Task OnInitializedAsync()
     {
         subscription = IProcessInputEventService.ProcessFinishEvents.Subscribe(OnEventReceived);
+        currentModel = ChatVersionState.GetCurrentModelKey();
+        apiKeySet = !string.IsNullOrWhiteSpace(ApiKeyStore.Load());
+        autoStartEnabled = SettingsOptionSnapshot.Value.AutoStartEnabled;
         await CountRequestAsync();
         await GetLastTenRequestsAsync();
     }
