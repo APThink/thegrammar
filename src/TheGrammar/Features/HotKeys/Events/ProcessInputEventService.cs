@@ -6,7 +6,7 @@ namespace TheGrammar.Features.HotKeys.Events
   public record ProcessStartDto(string Input, string Prompt);
   public record ProcessFinishDto(string OriginalText, string ModifiedText, string? ModelKey);
   public record ProcessCancellationDto();
-  
+  public record ProcessErrorDto(string Message);
 
   public interface IProcessInputEventService
   {
@@ -18,6 +18,9 @@ namespace TheGrammar.Features.HotKeys.Events
 
     IObservable<ProcessCancellationDto> ProcessCancellationEvents { get; }
     void TriggerProcessCancellation();
+
+    IObservable<ProcessErrorDto> ProcessErrorEvents { get; }
+    void TriggerProcessError(ProcessErrorDto processError);
   }
 
   public class ProcessInputEventService : IProcessInputEventService, IObservable<ProcessCancellationDto>
@@ -33,6 +36,9 @@ namespace TheGrammar.Features.HotKeys.Events
 
     public IObservable<ProcessCancellationDto> ProcessCancellationEvents =>
       _processCancellationEventStream.AsObservable();
+
+    private readonly ISubject<ProcessErrorDto> _processErrorEventStream = new Subject<ProcessErrorDto>();
+    public IObservable<ProcessErrorDto> ProcessErrorEvents => _processErrorEventStream.AsObservable();
 
     private bool _isProcessing = false;
 
@@ -54,6 +60,12 @@ namespace TheGrammar.Features.HotKeys.Events
       {
         _processCancellationEventStream.OnNext(new ProcessCancellationDto());
       }
+    }
+
+    public void TriggerProcessError(ProcessErrorDto processError)
+    {
+      _isProcessing = false;
+      _processErrorEventStream.OnNext(processError);
     }
 
     // Implement IObservable<ProcessCancellationDto> for backward compatibility

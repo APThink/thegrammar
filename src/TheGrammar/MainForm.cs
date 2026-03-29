@@ -18,6 +18,7 @@ public partial class MainForm : Form
   private IDisposable? processStartSubscription;
   private IDisposable? processStopSubscription;
   private IDisposable? processCanceledSubscription;
+  private IDisposable? processErrorSubscription;
   private readonly IProcessInputEventService _processEventService;
 
   private readonly nint _globalKeyHandlerHookId;
@@ -77,6 +78,11 @@ public partial class MainForm : Form
     processStartSubscription = _processEventService.ProcessStartEvents.Subscribe(_ => { StartAnimation(); });
     processStopSubscription = _processEventService.ProcessFinishEvents.Subscribe(_ => { StopAnimation(); });
     processCanceledSubscription = _processEventService.ProcessCancellationEvents.Subscribe(_ => { StopAnimation(); });
+    processErrorSubscription = _processEventService.ProcessErrorEvents.Subscribe(dto =>
+    {
+      StopAnimation();
+      ShowErrorBalloon(dto.Message);
+    });
   }
 
   private void OnDevTool(object sender, EventArgs e)
@@ -142,6 +148,14 @@ public partial class MainForm : Form
   }
 
 
+  private void ShowErrorBalloon(string message)
+  {
+    _trayIcon.BalloonTipIcon = ToolTipIcon.Error;
+    _trayIcon.BalloonTipTitle = "Error";
+    _trayIcon.BalloonTipText = message;
+    _trayIcon.ShowBalloonTip(5000);
+  }
+
   private void StartAnimation()
   {
     animationTimer.Start();
@@ -161,8 +175,9 @@ public partial class MainForm : Form
 
   private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
   {
-    processStartSubscription!.Dispose(); 
-    processStopSubscription!.Dispose(); 
-    processCanceledSubscription!.Dispose();
+    processStartSubscription?.Dispose();
+    processStopSubscription?.Dispose();
+    processCanceledSubscription?.Dispose();
+    processErrorSubscription?.Dispose();
   }
 }
