@@ -11,8 +11,8 @@
         </div>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" OnClick="Cancel" IconColor="Color.Primary" Size="Size.Large">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" OnClick="Submit" IconColor="Color.Secondary" Size="Size.Large" Disabled="_isValidating">
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" OnClick="Cancel" IconColor="Color.Secondary" Size="Size.Large">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" OnClick="Submit" IconColor="Color.Primary" Size="Size.Large" Disabled="_isValidating">
             @if (_isValidating)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />

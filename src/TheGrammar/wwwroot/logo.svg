@@ -1,0 +1,14 @@
+<svg width="280" height="80" viewBox="12 0 268 80" xmlns="http://www.w3.org/2000/svg">
+
+<g transform="translate(14, 19)">
+<rect x="0" y="0" width="46" height="42" rx="5" fill="none" stroke="#5cb85c" stroke-width="2.5" stroke-linecap="round"/>
+<line x1="9" y1="12" x2="33" y2="12" stroke="#6b7280" stroke-width="2.5" stroke-linecap="round"/>
+<line x1="9" y1="21" x2="29" y2="21" stroke="#6b7280" stroke-width="2.5" stroke-linecap="round"/>
+<line x1="9" y1="30" x2="25" y2="30" stroke="#6b7280" stroke-width="2.5" stroke-linecap="round"/>
+<polyline points="28,30 35,38 50,16" fill="none" stroke="#5cb85c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g transform="translate(76, 19)">
+<text x="0" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="500" fill="#ffffff" letter-spacing="-0.5">The Grammar</text>
+<text x="1" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="400" fill="#9ca3af" letter-spacing="1.5">WRITE WITH CONFIDENCE</text>
+</g>
+</svg>

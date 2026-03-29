@@ -1,7 +1,18 @@
-﻿
-<MudNavMenu>
-    <MudNavLink Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
-    <MudNavLink Href="/prompts" Match="NavLinkMatch.All">Prompts</MudNavLink>
-    <MudNavLink Href="/settings" Match="NavLinkMatch.All">Settings</MudNavLink>
-    <MudNavLink Href="/logging" Match="NavLinkMatch.All">Logging</MudNavLink>
-</MudNavMenu>
+<nav class="icon-nav">
+    <MudTooltip Text="Dashboard" Placement="Placement.Right">
+        <NavLink href="/" Match="NavLinkMatch.All" class="nav-icon-link">
+            <MudIcon Icon="@Icons.Material.Filled.Dashboard" />
+        </NavLink>
+    </MudTooltip>
+    <MudTooltip Text="Prompts" Placement="Placement.Right">
+        <NavLink href="/prompts" Match="NavLinkMatch.All" class="nav-icon-link">
+            <MudIcon Icon="@Icons.Material.Filled.TextFields" />
+        </NavLink>
+    </MudTooltip>
+    <MudTooltip Text="Settings" Placement="Placement.Right">
+        <NavLink href="/settings" Match="NavLinkMatch.All" class="nav-icon-link">
+            <MudIcon Icon="@Icons.Material.Filled.Settings" />
+        </NavLink>
+    </MudTooltip>
+
+</nav>

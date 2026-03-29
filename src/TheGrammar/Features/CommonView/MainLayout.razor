@@ -1,25 +1,20 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_theme" IsDarkMode="true" />
 <MudPopoverProvider />
 <MudSnackbarProvider />
 <MudDialogProvider />
 
 <PageTitle>The Grammar</PageTitle>
 
-<MudThemeProvider IsDarkMode="true" />
-
 <div class="page">
     <div class="main">
-        <MudLayout>
-            <MudAppBar Elevation="4">
-                <MudToolBar DisableGutters="true">
-                    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-                    <MudText Typo="Typo.h6" Class="ml-4">The Grammar</MudText>
-                </MudToolBar>
+        <MudLayout Style="--mud-drawer-width-left: 72px;">
+            <MudAppBar Elevation="4" DisableGutters="true" ToolBarClass="pl-4">
+                <img src="/logo.svg" alt="The Grammar" style="height: 60px;" />
             </MudAppBar>
 
-            <MudDrawer @bind-Open="_drawerOpen" Elevation="25" ClipMode="DrawerClipMode.Always">
+            <MudDrawer Open="true" Variant="DrawerVariant.Persistent" Elevation="25" ClipMode="DrawerClipMode.Always" Style="width: 72px; overflow: hidden;">
                 <NavMenu />
             </MudDrawer>
 

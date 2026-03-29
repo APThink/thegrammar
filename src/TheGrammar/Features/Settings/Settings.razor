@@ -36,7 +36,7 @@
             }
         </MudCardContent>
         <MudCardActions Style="justify-content: flex-end;">
-            <MudButton Variant="Variant.Filled" OnClick="SaveOpenAiClickHandler" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Secondary" Size="Size.Large">@(_isEditingApiKey ? "Save & Restart" : "Save")</MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="SaveOpenAiClickHandler" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Primary" Size="Size.Large">@(_isEditingApiKey ? "Save & Restart" : "Save")</MudButton>
         </MudCardActions>
     </MudCard>
 
@@ -50,26 +50,26 @@
             <MudSwitch
                 T="bool"
                 Value="@_settingsOption.AutoStartEnabled"
-                Color="Color.Secondary"
+                Color="Color.Primary"
                 Label="Auto-Start Enabled (The app should be restarted)"
                 ValueChanged="OnAutoStartChanged" />
 
             <MudSwitch
                 T="bool"
                 Value="@_settingsOption.PlaySoundOnProcessStart"
-                Color="Color.Secondary"
+                Color="Color.Primary"
                 Label="Play Sound on Process Start"
                 ValueChanged="OnPlaySoundOnProcessStartChanged" />
 
             <MudSwitch
                 T="bool"
                 Value="_settingsOption.AddAsteriskAtTheEndOfResponse"
-                Color="Color.Secondary"
+                Color="Color.Primary"
                 Label="Add Asterisk at the End of Response*"
                 ValueChanged="OnAddAsteriskAtTheEndOfResponseChanged" />
         </MudCardContent>
         <MudCardActions Style="justify-content: flex-end;">
-            <MudButton Variant="Variant.Filled" OnClick="SaveButtonClickHandler" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Secondary" Size="Size.Large">Save</MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="SaveButtonClickHandler" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Primary" Size="Size.Large">Save</MudButton>
         </MudCardActions>
     </MudCard>
 
