@@ -50,10 +50,16 @@ public partial class Settings
     Snackbar.Add("Saved", Severity.Success);
   }
 
-  public async Task SaveApiKeyClickHandler()
+  public async Task SaveOpenAiClickHandler()
   {
     try
     {
+      if (!_isEditingApiKey)
+      {
+        Snackbar.Add("Saved", Severity.Success);
+        return;
+      }
+
       if (string.IsNullOrWhiteSpace(_newApiKey))
       {
         Snackbar.Add("Api key is required", Severity.Error);
