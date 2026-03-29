@@ -12,7 +12,7 @@ public partial class AddPromptDialog
     private Keys _rightKey = Keys.A;
     private string _prompt = "Hello World";
 
-    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Inject]  public PromptRepository PromptRepository { get; set; } = null!;
     [Inject] public ISnackbar Snackbar { get; set; } = null!;
     [Inject] public IGlobalKeyBindingState KeyBindingState { get; set; } = null!;
@@ -41,8 +41,8 @@ public partial class AddPromptDialog
         }
     }
 
-    void Cancel()
+    private void Cancel()
     {
-        MudDialog?.Cancel();
+        MudDialog.Cancel();
     }
 }

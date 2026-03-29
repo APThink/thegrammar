@@ -17,7 +17,7 @@ public partial class AddModelDialog
     private float _presencePenalty = 0.0f;
     private bool _isValidating = false;
 
-    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Inject] public ModelRepository ModelRepository { get; set; } = null!;
     [Inject] public ISnackbar Snackbar { get; set; } = null!;
     [Inject] public OpenAIClient OpenAiClient { get; set; } = null!;
@@ -74,5 +74,5 @@ public partial class AddModelDialog
         }
     }
 
-    void Cancel() => MudDialog?.Cancel();
+    private void Cancel() => MudDialog.Cancel();
 }
