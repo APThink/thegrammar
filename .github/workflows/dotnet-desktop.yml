@@ -45,7 +45,7 @@ jobs:
         run: dotnet restore TheGrammar.sln
 
       - name: Publish Application
-        run: dotnet publish TheGrammar.sln --configuration Release --no-restore --output publish
+        run: dotnet publish TheGrammar.sln --configuration Release --no-restore --output publish /p:Version=${{ github.ref_name }}
 
       - name: Create Squirrel Package
         shell: pwsh
