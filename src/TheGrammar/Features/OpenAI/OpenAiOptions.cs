@@ -7,7 +7,6 @@ public class OpenAiOptions
 {
   public const string SectionName = "OpenApi";
 
-  public required string ApiKey { get; init; }
   public required int MaxTokenResponse { get; init; }
   public required string DefaultModel { get; init; }
 
@@ -34,16 +33,6 @@ public class OpenAiOptions
   {
     root[SectionName] ??= new JsonObject();
     return root[SectionName]!.AsObject();
-  }
-
-  public static void UpdateApiKey(string apiKey)
-  {
-    var root = LoadJson();
-    var section = GetOrCreateSection(root);
-
-    section[nameof(ApiKey)] = apiKey;
-
-    SaveJson(root);
   }
 
   public static void UpdateMaxTokenResponse(int maxTokenResponse)
