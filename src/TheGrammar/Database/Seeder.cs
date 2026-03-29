@@ -13,7 +13,7 @@ public static class Seeder
         try
         {
             var context = services.GetRequiredService<ApplicationDbContext>();
-            context.Database.Migrate();
+            await context.Database.MigrateAsync();
             await SeedData.SeedPrompts(context);
             await SeedData.SeedModels(context);
         }

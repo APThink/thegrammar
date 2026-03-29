@@ -1,8 +1,9 @@
+using Microsoft.EntityFrameworkCore;
 using TheGrammar.Domain;
 
 namespace TheGrammar.Database;
 
-public class SeedData
+public static class SeedData
 {
     public static async Task SeedPrompts(ApplicationDbContext dbContext)
     {
@@ -24,11 +25,6 @@ public class SeedData
 
     public static async Task SeedModels(ApplicationDbContext dbContext)
     {
-        if (dbContext.Models.Any())
-        {
-            return;
-        }
-
         var models = new List<Model>
         {
             new()
@@ -70,10 +66,47 @@ public class SeedData
                 TopP = 1.0f,
                 FrequencyPenalty = 0.0f,
                 PresencePenalty = 0.0f
+            },
+            new()
+            {
+                Key = "GPT-5.4",
+                DisplayName = "GPT-5.4",
+                ModelName = "gpt-5.4",
+                Temperature = null,
+                TopP = 1.0f,
+                FrequencyPenalty = 0.0f,
+                PresencePenalty = 0.0f
+            },
+            new()
+            {
+                Key = "GPT-5.4mini",
+                DisplayName = "GPT-5.4 Mini",
+                ModelName = "gpt-5.4-mini",
+                Temperature = null,
+                TopP = 1.0f,
+                FrequencyPenalty = 0.0f,
+                PresencePenalty = 0.0f
+            },
+            new()
+            {
+                Key = "GPT-5.4Nano",
+                DisplayName = "GPT-5.4 Nano",
+                ModelName = "gpt-5.4-nano",
+                Temperature = null,
+                TopP = 1.0f,
+                FrequencyPenalty = 0.0f,
+                PresencePenalty = 0.0f
             }
         };
 
-        dbContext.Models.AddRange(models);
+        foreach (var model in models)
+        {
+            var exists = await dbContext.Models.AnyAsync(m => m.Key == model.Key);
+            if (exists)
+                continue;
+            dbContext.Models.Add(model);
+        }
+        
         await dbContext.SaveChangesAsync();
     }
 }
