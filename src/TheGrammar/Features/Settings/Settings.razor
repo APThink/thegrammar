@@ -1,58 +1,76 @@
 @page "/settings"
 
-
 <MudText Typo="Typo.h6" Style="padding-bottom: 25px">Settings</MudText>
 
-<MudCard>
-    <MudCardContent Style="display: flex; flex-direction: column; gap: 25px;">
-        <div style="display: flex; align-items: flex-end; gap: 10px;">
-            <MudSelect T="string" Label="Model" HelperText="Select AI Model" Value="@ChatVersionState.GetCurrentModelKey()" ValueChanged="OnSelectedModelChanged" Style="flex: 1">
-                @foreach (var model in ChatVersionState.GetAllModels())
-                {
-                    <MudSelectItem Value="@model.Key">@model.DisplayName</MudSelectItem>
-                }
-            </MudSelect>
-            <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddModel" Title="Add new model" />
-        </div>
-        @if (_isEditingApiKey)
-        {
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <MudTextField @bind-Value="_newApiKey" Label="New API Key" Variant="Variant.Text" Immediate="true" Style="flex: 1;" />
-                <MudButton Variant="Variant.Filled" OnClick="SaveApiKeyClickHandler" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Secondary">Save & Restart</MudButton>
-                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CancelEditApiKey" />
-            </div>
-        }
-        else
-        {
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <MudTextField Value="@MaskedApiKey" Label="Open API Key" Variant="Variant.Text" ReadOnly="true" Style="flex: 1;" />
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="StartEditApiKey" />
-            </div>
-        }
+<div style="display: flex; flex-direction: column; gap: 20px;">
 
-        <MudSwitch 
-            T="bool" 
-            Value="@_settingsOption.AutoStartEnabled" 
-            Color="Color.Secondary" 
-            Label="Auto-Start Enabled (The app should be restarted)"
-            ValueChanged="OnAutoStartChanged" />
-        
-        <MudSwitch 
-            T="bool" 
-            Value="@_settingsOption.PlaySoundOnProcessStart" 
-            Color="Color.Secondary" 
-            Label="Play Sound on Process Start"
-            ValueChanged="OnPlaySoundOnProcessStartChanged" />
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.subtitle1">OpenAI</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent Style="display: flex; flex-direction: column; gap: 25px;">
+            <div style="display: flex; align-items: flex-end; gap: 10px;">
+                <MudSelect T="string" Label="Model" HelperText="Select AI Model" Value="@ChatVersionState.GetCurrentModelKey()" ValueChanged="OnSelectedModelChanged" Style="flex: 1">
+                    @foreach (var model in ChatVersionState.GetAllModels())
+                    {
+                        <MudSelectItem Value="@model.Key">@model.DisplayName</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddModel" Title="Add new model" />
+            </div>
+            @if (_isEditingApiKey)
+            {
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <MudTextField @bind-Value="_newApiKey" Label="New API Key" Variant="Variant.Text" Immediate="true" Style="flex: 1;" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CancelEditApiKey" />
+                </div>
+            }
+            else
+            {
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <MudTextField Value="@MaskedApiKey" Label="Open API Key" Variant="Variant.Text" ReadOnly="true" Style="flex: 1;" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="StartEditApiKey" />
+                </div>
+            }
+        </MudCardContent>
+        <MudCardActions Style="justify-content: flex-end;">
+            <MudButton Variant="Variant.Filled" OnClick="SaveOpenAiClickHandler" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Secondary" Size="Size.Large">@(_isEditingApiKey ? "Save & Restart" : "Save")</MudButton>
+        </MudCardActions>
+    </MudCard>
 
-        <MudSwitch 
-            T="bool" 
-            Value="_settingsOption.AddAsteriskAtTheEndOfResponse" 
-            Color="Color.Secondary" 
-            Label="Add Asterisk at the End of Response*"
-            ValueChanged="OnAddAsteriskAtTheEndOfResponseChanged" />
-    
-    </MudCardContent>
-    <MudCardActions>
-        <MudButton Variant="Variant.Filled" OnClick="SaveButtonClickHandler" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Secondary" Size="Size.Large">Save</MudButton>
-    </MudCardActions>
-</MudCard>
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.subtitle1">App Settings</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent Style="display: flex; flex-direction: column; gap: 25px;">
+            <MudSwitch
+                T="bool"
+                Value="@_settingsOption.AutoStartEnabled"
+                Color="Color.Secondary"
+                Label="Auto-Start Enabled (The app should be restarted)"
+                ValueChanged="OnAutoStartChanged" />
+
+            <MudSwitch
+                T="bool"
+                Value="@_settingsOption.PlaySoundOnProcessStart"
+                Color="Color.Secondary"
+                Label="Play Sound on Process Start"
+                ValueChanged="OnPlaySoundOnProcessStartChanged" />
+
+            <MudSwitch
+                T="bool"
+                Value="_settingsOption.AddAsteriskAtTheEndOfResponse"
+                Color="Color.Secondary"
+                Label="Add Asterisk at the End of Response*"
+                ValueChanged="OnAddAsteriskAtTheEndOfResponseChanged" />
+        </MudCardContent>
+        <MudCardActions Style="justify-content: flex-end;">
+            <MudButton Variant="Variant.Filled" OnClick="SaveButtonClickHandler" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Secondary" Size="Size.Large">Save</MudButton>
+        </MudCardActions>
+    </MudCard>
+
+</div>
