@@ -39,7 +39,9 @@ internal static class Program
 
     private static void RunApplication()
     {
-        ApplicationConfiguration.Initialize();
+        Application.SetHighDpiMode(HighDpiMode.SystemAware);
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
 
         var builder = Host.CreateApplicationBuilder();
        

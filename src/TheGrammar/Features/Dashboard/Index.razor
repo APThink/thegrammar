@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using TheGrammar.Features.HotKeys.Events
 
 <MudText Typo="Typo.h6" Style="padding-bottom: 25px">Dashboard</MudText>
 
@@ -29,12 +30,12 @@
     <MudText Typo="Typo.h6" Style="padding-bottom: 25px">Last 10</MudText>
 
     <MudPaper>
-        <MudList Clickable="false" Dense="true" DisableGutters="false">
+        <MudList T="List<ProcessFinishDto>" Clickable="false" Dense="true" DisableGutters="false">
             @foreach (var message in messages)
             {
-                <MudListItem Icon="@Icons.Material.Filled.ArrowRightAlt" Text="@message.OriginalText" InitiallyExpanded="false">
+                <MudListItem T="ProcessFinishDto" Icon="@Icons.Material.Filled.ArrowRightAlt" Text="@message.OriginalText" InitiallyExpanded="false">
                     <NestedList>
-                        <MudListItem>
+                        <MudListItem T="string">
                             <MudTextField @ref="multilineReference"
                                 T="string"
                                 Label="@($"Corrected Text: (Model: {message.ModelKey ?? "Unknown"})")"

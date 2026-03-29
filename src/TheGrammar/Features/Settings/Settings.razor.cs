@@ -50,7 +50,7 @@ public partial class Settings
   public async Task AddModel()
   {
     var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-    var dialogReference = DialogService.Show<AddModelDialog>("Add New Model", options);
+    var dialogReference = await DialogService.ShowAsync<AddModelDialog>("Add New Model", options);
     var result = await dialogReference.Result;
 
     if (result is { Canceled: false, Data: true })
