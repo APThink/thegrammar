@@ -26,10 +26,10 @@ internal static class TraySpinnerFrames
       g.Clear(Color.Transparent);
       g.SmoothingMode = SmoothingMode.AntiAlias;
 
-      using (var trackPen = new Pen(Color.FromArgb(55, 255, 255, 255), 2f))
+      using (var trackPen = new Pen(Color.FromArgb(55, 92, 184, 92), 2f))
         g.DrawEllipse(trackPen, rect);
 
-      using var arcPen = new Pen(Color.White, 2.5f);
+      using var arcPen = new Pen(Color.FromArgb(92, 184, 92), 2.5f);
       arcPen.StartCap = LineCap.Round;
       arcPen.EndCap = LineCap.Round;
       g.DrawArc(arcPen, rect, startAngle, sweepAngle);
