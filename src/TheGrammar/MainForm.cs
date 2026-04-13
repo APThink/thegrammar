@@ -36,8 +36,7 @@ public partial class MainForm : Form
 
     _globalHotKeyHandler = app.Services.GetRequiredService<HotKeyListener>();
 
-    _globalHotKeyHandler.SetHook(_globalHotKeyHandler._proc);
-    _globalKeyHandlerHookId = HotKeyListener._hookID;
+    _globalHotKeyHandler.RegisterAll();
 
     _trayMenu = new ContextMenuStrip();
     _trayMenu.Items.Add("DevTools", null, OnDevTool!);
@@ -136,7 +135,7 @@ public partial class MainForm : Form
       ShowInTaskbar = false;
     }
 
-    HotKeyListener.UnhookWindowsHookEx(_globalKeyHandlerHookId);
+    _globalHotKeyHandler.Dispose();
   }
 
 
