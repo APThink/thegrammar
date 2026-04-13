@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using TheGrammar.Domain;
+using TheGrammar.Features.HotKeys.Services;
 using TheGrammar.Features.Prompts.Components;
 
 namespace TheGrammar.Features.Prompts;
@@ -9,6 +10,7 @@ public partial class Prompts
 {
     [Inject] public IDialogService DialogService { get; set; } = null!;
     [Inject] public PromptRepository PromptRepository { get; set; } = null!;
+    [Inject] public HotKeyListener HotKeyListener { get; set; } = null!;
 
     private List<Prompt> prompts = new();
     protected override async Task OnInitializedAsync()
@@ -33,5 +35,7 @@ public partial class Prompts
         {
             await LoadPrompts();
         }
+        
+        HotKeyListener.Refresh();
     }
 }

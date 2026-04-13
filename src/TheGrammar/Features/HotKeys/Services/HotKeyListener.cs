@@ -1,69 +1,105 @@
 ﻿using System.Runtime.InteropServices;
-using System.Diagnostics;
 using TheGrammar.Features.HotKeys.Events;
 
 namespace TheGrammar.Features.HotKeys.Services
 {
-  public class HotKeyListener
-  {
-    public const int WH_KEYBOARD_LL = 13;
-    public const int WM_KEYDOWN = 0x0100;
-    public LowLevelKeyboardProc _proc;
-    public static nint _hookID = nint.Zero;
-    private readonly IGlobalKeyBindingState _keyBindingState;
-    private readonly IProcessInputEventService _processInputEventService;
-
-    public HotKeyListener(IGlobalKeyBindingState keyBindingState, IProcessInputEventService processInputEventService)
+    public class HotKeyListener : NativeWindow, IDisposable
     {
-      _proc = HookCallback;
-      _keyBindingState = keyBindingState;
-      _processInputEventService = processInputEventService;
-    }
+        private const int WM_HOTKEY = 0x0312;
 
-    public nint SetHook(LowLevelKeyboardProc proc)
-    {
-      using var curProcess = Process.GetCurrentProcess();
-      using var curModule = curProcess.MainModule!;
-      return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
-    }
-
-    public delegate nint LowLevelKeyboardProc(int nCode, nint wParam, nint lParam);
-
-    public nint HookCallback(int nCode, nint wParam, nint lParam)
-    {
-      if (nCode >= 0 && wParam == WM_KEYDOWN)
-      {
-        var vkCode = Marshal.ReadInt32(lParam);
-        var key = (Keys)vkCode;
-        var modifiers = Control.ModifierKeys;
-
-        if (_keyBindingState.KeyBindings.TryGetValue((key, modifiers), out string? prompt))
+        [Flags]
+        private enum FsModifiers : uint
         {
-          ModifyClipboardTextAsync(prompt);
-          return 1;
+            Alt = 0x0001,
+            Control = 0x0002,
+            Shift = 0x0004,
+            Win = 0x0008,
+            NoRepeat = 0x4000
         }
-      }
 
-      return CallNextHookEx(_hookID, nCode, wParam, lParam);
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool UnregisterHotKey(nint hWnd, int id);
+
+        private readonly IGlobalKeyBindingState _keyBindingState;
+        private readonly IProcessInputEventService _processInputEventService;
+        private readonly Dictionary<int, string> _idToPrompt = new();
+        private int _nextId = 1;
+
+        public HotKeyListener(
+            IGlobalKeyBindingState keyBindingState,
+            IProcessInputEventService processInputEventService)
+        {
+            _keyBindingState = keyBindingState;
+            _processInputEventService = processInputEventService;
+
+            var cp = new CreateParams { Caption = "TheGrammarHotKeyWindow" };
+            CreateHandle(cp);
+        }
+
+        public void RegisterAll()
+        {
+            foreach (var binding in _keyBindingState.KeyBindings)
+            {
+                var (key, modifiers) = binding.Key;
+                var prompt = binding.Value;
+                var id = _nextId++;
+
+                var fs = ToFsModifiers(modifiers) | FsModifiers.NoRepeat;
+
+                if (RegisterHotKey(Handle, id, (uint)fs, (uint)key))
+                {
+                    _idToPrompt[id] = prompt;
+                }
+            }
+        }
+
+        public void UnregisterAll()
+        {
+            foreach (var id in _idToPrompt.Keys)
+            {
+                UnregisterHotKey(Handle, id);
+            }
+            _idToPrompt.Clear();
+        }
+
+        private static FsModifiers ToFsModifiers(Keys modifiers)
+        {
+            var fs = (FsModifiers)0;
+            if ((modifiers & Keys.Control) == Keys.Control) fs |= FsModifiers.Control;
+            if ((modifiers & Keys.Alt) == Keys.Alt) fs |= FsModifiers.Alt;
+            if ((modifiers & Keys.Shift) == Keys.Shift) fs |= FsModifiers.Shift;
+            return fs;
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_HOTKEY)
+            {
+                var id = m.WParam.ToInt32();
+                if (_idToPrompt.TryGetValue(id, out var prompt))
+                {
+                    var userInput = Clipboard.GetText();
+                    _processInputEventService.TriggerProcessStart(
+                        new ProcessStartDto(userInput, prompt));
+                    return;
+                }
+            }
+            base.WndProc(ref m);
+        }
+
+        public void Refresh()
+        {
+            UnregisterAll();
+            RegisterAll();
+        }
+        
+        public void Dispose()
+        {
+            UnregisterAll();
+            DestroyHandle();
+        }
     }
-
-    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern nint SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, nint hMod, uint dwThreadId);
-
-    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool UnhookWindowsHookEx(nint hhk);
-
-    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    public static extern nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    public static extern nint GetModuleHandle(string lpModuleName);
-
-    public void ModifyClipboardTextAsync(string prompt)
-    {
-      var userInput = Clipboard.GetText();
-      _processInputEventService.TriggerProcessStart(new ProcessStartDto(userInput, prompt));
-    }
-  }
 }
