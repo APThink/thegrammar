@@ -76,11 +76,38 @@ namespace TheGrammar.Features.HotKeys.Services
             var id = _nextId++;
             var fs = ToFsModifiers(modifiers) | FsModifiers.NoRepeat;
 
-            if (RegisterHotKey(Handle, id, (uint)fs, (uint)key))
+            if (RegisterHotKeyWithRetry(id, fs, key))
             {
                 _idToPrompt[id] = prompt;
                 _promptIdToHotkeyId[promptId] = id;
             }
+        }
+
+        // On startup, a previous instance of the app may have just been killed (see
+        // SquirrelHooks.OnAppRun) while still holding these exact hotkeys. Windows does not
+        // release a terminated process's hotkey registrations synchronously with process exit,
+        // so the first RegisterHotKey call can transiently fail with ERROR_HOTKEY_ALREADY_REGISTERED
+        // even though the owning process is already gone. A few short retries clear this up
+        // reliably without meaningfully slowing down the case where the key really is taken.
+        private bool RegisterHotKeyWithRetry(int id, FsModifiers fs, Keys key)
+        {
+            const int maxAttempts = 5;
+            const int delayMs = 50;
+
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                if (RegisterHotKey(Handle, id, (uint)fs, (uint)key))
+                {
+                    return true;
+                }
+
+                if (attempt < maxAttempts)
+                {
+                    Thread.Sleep(delayMs);
+                }
+            }
+
+            return false;
         }
 
         // Exposed for integration tests to assert on registration state without reaching into
