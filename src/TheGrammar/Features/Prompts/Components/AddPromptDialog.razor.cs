@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using TheGrammar.Features.HotKeys;
+using TheGrammar.Features.HotKeys.Services;
 using TheGrammar.Domain;
 
 namespace TheGrammar.Features.Prompts.Components;
@@ -16,6 +17,7 @@ public partial class AddPromptDialog
     [Inject]  public PromptRepository PromptRepository { get; set; } = null!;
     [Inject] public ISnackbar Snackbar { get; set; } = null!;
     [Inject] public IGlobalKeyBindingState KeyBindingState { get; set; } = null!;
+    [Inject] public HotKeyListener HotKeyListener { get; set; } = null!;
 
     private static List<Keys> PossibleKeys => Enum.GetValues(typeof(Keys)).Cast<Keys>().Where(k => (int)k >= 65 && (int)k <= 90 || (int)k >= 112 && (int)k <= 123).ToList();
     async Task Submit()
@@ -31,6 +33,7 @@ public partial class AddPromptDialog
 
             await PromptRepository.AddPromptAsync(prompt);
             await KeyBindingState.InitAsync();
+            HotKeyListener.Register(prompt.Id, prompt.RightKey, prompt.LeftKey, prompt.Promt);
             Snackbar.Add($"Added prompt: {prompt}", Severity.Success);
             MudDialog!.Close(DialogResult.Ok(true));
         }
