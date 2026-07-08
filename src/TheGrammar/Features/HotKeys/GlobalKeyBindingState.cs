@@ -5,13 +5,13 @@ namespace TheGrammar.Features.HotKeys;
 
 public interface IGlobalKeyBindingState
 {
-    Dictionary<(Keys, Keys), string> KeyBindings { get; }
+    Dictionary<int, (Keys LeftKey, Keys RightKey, string Prompt)> KeyBindings { get; }
     Task InitAsync();
 }
 
 public class GlobalKeyBindingState : IGlobalKeyBindingState
 {
-    public Dictionary<(Keys, Keys), string> KeyBindings { get; private set; } = new();
+    public Dictionary<int, (Keys LeftKey, Keys RightKey, string Prompt)> KeyBindings { get; private set; } = new();
 
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
 
@@ -24,14 +24,16 @@ public class GlobalKeyBindingState : IGlobalKeyBindingState
 
     public async Task InitAsync()
     {
-        using var scope = _dbContextFactory.CreateDbContext().Database.BeginTransaction();
-        var prompts = await _dbContextFactory.CreateDbContext().Prompts.ToListAsync();
+        using var context = _dbContextFactory.CreateDbContext();
+        var prompts = await context.Prompts.ToListAsync();
 
-        KeyBindings = new Dictionary<(Keys, Keys), string>();
+        var keyBindings = new Dictionary<int, (Keys LeftKey, Keys RightKey, string Prompt)>();
 
         foreach (var prompt in prompts)
         {
-            KeyBindings.Add((prompt.RightKey, prompt.LeftKey), prompt.Promt);
+            keyBindings.Add(prompt.Id, (prompt.LeftKey, prompt.RightKey, prompt.Promt));
         }
+
+        KeyBindings = keyBindings;
     }
 }

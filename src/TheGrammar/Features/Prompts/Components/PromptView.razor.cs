@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using TheGrammar.Domain;
+using TheGrammar.Features.HotKeys;
+using TheGrammar.Features.HotKeys.Services;
 
 namespace TheGrammar.Features.Prompts.Components;
 
@@ -8,6 +10,8 @@ public partial class PromptView
 {
     [CascadingParameter] public PromptRepository PromptRepository { get; set; } = null!;
     [Inject] public ISnackbar Snackbar { get; set; } = null!;
+    [Inject] public IGlobalKeyBindingState KeyBindingState { get; set; } = null!;
+    [Inject] public HotKeyListener HotKeyListener { get; set; } = null!;
     [Parameter] public List<Prompt> Prompts { get; set; } = new List<Prompt>();
 
     private static List<Keys> PossibleKeys => Enum.GetValues(typeof(Keys)).Cast<Keys>().Where(k => (int)k >= 65 && (int)k <= 90 || (int)k >= 112 && (int)k <= 123).ToList();
@@ -17,6 +21,8 @@ public partial class PromptView
         try
         {
             await PromptRepository.UpdatePromptAsync(prompt);
+            await KeyBindingState.InitAsync();
+            HotKeyListener.Register(prompt.Id, prompt.RightKey, prompt.LeftKey, prompt.Promt);
             Snackbar.Add($"Updated prompt: {prompt}", Severity.Success);
         }
         catch (Exception ex)

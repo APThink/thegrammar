@@ -6,6 +6,7 @@ namespace TheGrammar.Features.HotKeys.Services
     public class HotKeyListener : NativeWindow, IDisposable
     {
         private const int WM_HOTKEY = 0x0312;
+        private const int WM_INPUTLANGCHANGE = 0x0051;
 
         [Flags]
         private enum FsModifiers : uint
@@ -25,6 +26,10 @@ namespace TheGrammar.Features.HotKeys.Services
 
         private readonly IGlobalKeyBindingState _keyBindingState;
         private readonly IProcessInputEventService _processInputEventService;
+
+        // promptId -> the OS hotkey id currently registered for it
+        private readonly Dictionary<int, int> _promptIdToHotkeyId = new();
+        // OS hotkey id -> prompt text, used to resolve WM_HOTKEY messages
         private readonly Dictionary<int, string> _idToPrompt = new();
         private int _nextId = 1;
 
@@ -41,18 +46,9 @@ namespace TheGrammar.Features.HotKeys.Services
 
         public void RegisterAll()
         {
-            foreach (var binding in _keyBindingState.KeyBindings)
+            foreach (var (promptId, binding) in _keyBindingState.KeyBindings)
             {
-                var (key, modifiers) = binding.Key;
-                var prompt = binding.Value;
-                var id = _nextId++;
-
-                var fs = ToFsModifiers(modifiers) | FsModifiers.NoRepeat;
-
-                if (RegisterHotKey(Handle, id, (uint)fs, (uint)key))
-                {
-                    _idToPrompt[id] = prompt;
-                }
+                Register(promptId, binding.RightKey, binding.LeftKey, binding.Prompt);
             }
         }
 
@@ -63,6 +59,35 @@ namespace TheGrammar.Features.HotKeys.Services
                 UnregisterHotKey(Handle, id);
             }
             _idToPrompt.Clear();
+            _promptIdToHotkeyId.Clear();
+        }
+
+        // Registers (or replaces) the hotkey for a single prompt without touching any other
+        // currently-registered hotkey.
+        public void Register(int promptId, Keys key, Keys modifiers, string prompt)
+        {
+            if (_promptIdToHotkeyId.TryGetValue(promptId, out var previousHotkeyId))
+            {
+                UnregisterHotKey(Handle, previousHotkeyId);
+                _idToPrompt.Remove(previousHotkeyId);
+                _promptIdToHotkeyId.Remove(promptId);
+            }
+
+            var id = _nextId++;
+            var fs = ToFsModifiers(modifiers) | FsModifiers.NoRepeat;
+
+            if (RegisterHotKey(Handle, id, (uint)fs, (uint)key))
+            {
+                _idToPrompt[id] = prompt;
+                _promptIdToHotkeyId[promptId] = id;
+            }
+        }
+
+        // Exposed for integration tests to assert on registration state without reaching into
+        // private fields via reflection.
+        internal int? TryGetHotkeyId(int promptId)
+        {
+            return _promptIdToHotkeyId.TryGetValue(promptId, out var id) ? id : null;
         }
 
         private static FsModifiers ToFsModifiers(Keys modifiers)
@@ -87,6 +112,14 @@ namespace TheGrammar.Features.HotKeys.Services
                     return;
                 }
             }
+            else if (m.Msg == WM_INPUTLANGCHANGE)
+            {
+                // The scan code RegisterHotKey binds to is resolved using the keyboard layout
+                // active at registration time. When the user switches layouts, previously
+                // registered hotkeys keep firing on the old physical key position unless they
+                // are re-registered so Windows recomputes the mapping under the new layout.
+                Refresh();
+            }
             base.WndProc(ref m);
         }
 
@@ -95,7 +128,7 @@ namespace TheGrammar.Features.HotKeys.Services
             UnregisterAll();
             RegisterAll();
         }
-        
+
         public void Dispose()
         {
             UnregisterAll();
