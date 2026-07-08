@@ -25,6 +25,7 @@ public class SquirrelHooks
             if (process.Id != Environment.ProcessId)
             {
                 process.Kill();
+                process.WaitForExit(5000);
             }
         }
 
