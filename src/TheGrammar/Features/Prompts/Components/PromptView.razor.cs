@@ -22,8 +22,15 @@ public partial class PromptView
         {
             await PromptRepository.UpdatePromptAsync(prompt);
             await KeyBindingState.InitAsync();
-            HotKeyListener.Register(prompt.Id, prompt.RightKey, prompt.LeftKey, prompt.Promt);
-            Snackbar.Add($"Updated prompt: {prompt}", Severity.Success);
+            var registered = HotKeyListener.Register(prompt.Id, key: prompt.RightKey, modifiers: prompt.LeftKey, prompt: prompt.Promt);
+            if (registered)
+            {
+                Snackbar.Add($"Updated prompt: {prompt}", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"Updated prompt, but the hotkey {prompt} is already in use by another shortcut", Severity.Warning);
+            }
         }
         catch (Exception ex)
         {

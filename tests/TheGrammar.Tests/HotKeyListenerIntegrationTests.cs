@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Data.Sqlite;
@@ -28,6 +29,12 @@ public class HotKeyListenerIntegrationTests : IDisposable
 
   [DllImport("user32.dll", SetLastError = true)]
   private static extern bool PostMessage(nint hWnd, int msg, nint wParam, nint lParam);
+
+  [DllImport("user32.dll", SetLastError = true)]
+  private static extern bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
+
+  [DllImport("user32.dll", SetLastError = true)]
+  private static extern bool UnregisterHotKey(nint hWnd, int id);
 
   private readonly string _dbPath;
   private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
@@ -258,6 +265,240 @@ public class HotKeyListenerIntegrationTests : IDisposable
       Assert.Equal(2, received.Count);
       Assert.Equal("prompt-a", received[0].Prompt);
       Assert.Equal("prompt-b", received[1].Prompt);
+
+      return true;
+    });
+  }
+
+  [Fact]
+  public void EditingHotkey_WhenNewCombinationIsAlreadyTaken_KeepsOldHotkeyWorking()
+  {
+    RunOnSta(() =>
+    {
+      var events = new ProcessInputEventService();
+      var received = new List<ProcessStartDto>();
+      events.ProcessStartEvents.Subscribe(received.Add);
+
+      var prompt = NewPrompt(Keys.F13, "before-edit");
+      _promptRepository.AddPromptAsync(prompt).GetAwaiter().GetResult();
+      _keyBindingState.InitAsync().GetAwaiter().GetResult();
+
+      using var listener = new HotKeyListener(_keyBindingState, events);
+      listener.RegisterAll();
+
+      var originalId = listener.TryGetHotkeyId(prompt.Id);
+      Assert.NotNull(originalId);
+
+      // Occupy the combo we're about to move the prompt to from a separate window, so the
+      // listener's re-registration attempt genuinely fails (mirrors a real key collision)
+      // rather than being simulated.
+      const int blockerId = 999;
+      const uint modAltControlShiftNoRepeat = 0x0001 | 0x0002 | 0x0004 | 0x4000;
+      var blocker = new NativeWindow();
+      blocker.CreateHandle(new CreateParams { Caption = "hotkey-blocker" });
+
+      try
+      {
+        Assert.True(RegisterHotKey(blocker.Handle, blockerId, modAltControlShiftNoRepeat, (uint)Keys.F18));
+
+        prompt.RightKey = Keys.F18;
+        prompt.Promt = "after-edit";
+        _promptRepository.UpdatePromptAsync(prompt).GetAwaiter().GetResult();
+        _keyBindingState.InitAsync().GetAwaiter().GetResult();
+
+        // bug #3: a failed re-registration must not tear down the hotkey that was already working
+        var registered = listener.Register(prompt.Id, prompt.RightKey, prompt.LeftKey, prompt.Promt);
+        Assert.False(registered);
+
+        var idAfterFailedRegister = listener.TryGetHotkeyId(prompt.Id);
+        Assert.Equal(originalId, idAfterFailedRegister);
+
+        PostHotkey(listener.Handle, originalId.Value);
+        Assert.Single(received);
+        Assert.Equal("before-edit", received[0].Prompt);
+      }
+      finally
+      {
+        UnregisterHotKey(blocker.Handle, blockerId);
+        blocker.DestroyHandle();
+      }
+
+      return true;
+    });
+  }
+
+  [Fact]
+  public void RegisterAll_BeforeKeyBindingStateInitialized_ThrowsInsteadOfSilentlyRegisteringNothing()
+  {
+    RunOnSta(() =>
+    {
+      var events = new ProcessInputEventService();
+      using var listener = new HotKeyListener(_keyBindingState, events);
+
+      // _keyBindingState.InitAsync() was never called - KeyBindings would silently be empty
+      Assert.Throws<InvalidOperationException>(() => listener.RegisterAll());
+
+      return true;
+    });
+  }
+
+  [Fact]
+  public void ClipboardReadFailure_DoesNotCrashListener()
+  {
+    RunOnSta(() =>
+    {
+      var events = new ProcessInputEventService();
+      var received = new List<ProcessStartDto>();
+      events.ProcessStartEvents.Subscribe(received.Add);
+
+      var prompt = NewPrompt(Keys.F13, "prompt-a");
+      _promptRepository.AddPromptAsync(prompt).GetAwaiter().GetResult();
+      _keyBindingState.InitAsync().GetAwaiter().GetResult();
+
+      using var listener = new HotKeyListener(_keyBindingState, events)
+      {
+        ClipboardTextProvider = () => throw new COMException("CLIPBRD_E_CANT_OPEN", unchecked((int)0x800401D0))
+      };
+      listener.RegisterAll();
+
+      var id = listener.TryGetHotkeyId(prompt.Id);
+      Assert.NotNull(id);
+
+      // Exercise the exact WndProc code path directly: the real OS message pump swallows
+      // exceptions that escape a window procedure in a way that can't be reliably observed
+      // from a test (see TriggerHotkey's doc comment), so we can't prove this through
+      // PostMessage/DoEvents alone.
+      var thrown = Record.Exception(() => listener.TriggerHotkey(id!.Value));
+
+      Assert.Null(thrown);
+      Assert.Empty(received);
+
+      return true;
+    });
+  }
+
+  [Fact]
+  public void EditingPromptText_WithUnchangedKeyCombination_UpdatesTextWithoutReRegistering()
+  {
+    RunOnSta(() =>
+    {
+      var events = new ProcessInputEventService();
+      var received = new List<ProcessStartDto>();
+      events.ProcessStartEvents.Subscribe(received.Add);
+
+      var prompt = NewPrompt(Keys.F13, "before-edit");
+      _promptRepository.AddPromptAsync(prompt).GetAwaiter().GetResult();
+      _keyBindingState.InitAsync().GetAwaiter().GetResult();
+
+      using var listener = new HotKeyListener(_keyBindingState, events);
+      listener.RegisterAll();
+
+      var originalId = listener.TryGetHotkeyId(prompt.Id);
+      Assert.NotNull(originalId);
+
+      // act: edit only the prompt text, keeping the same key combination - the way PromptView
+      // does when a user just tweaks the wording without touching the shortcut
+      prompt.Promt = "after-edit";
+      _promptRepository.UpdatePromptAsync(prompt).GetAwaiter().GetResult();
+      _keyBindingState.InitAsync().GetAwaiter().GetResult();
+
+      // bug #4: re-registering the same combination must not fail (the old id still owns that
+      // combo, so a naive re-register-under-a-new-id would lose to it) and must pick up the new text
+      var registered = listener.Register(prompt.Id, prompt.RightKey, prompt.LeftKey, prompt.Promt);
+      Assert.True(registered);
+
+      var idAfterEdit = listener.TryGetHotkeyId(prompt.Id);
+      Assert.Equal(originalId, idAfterEdit);
+
+      PostHotkey(listener.Handle, originalId.Value);
+      Assert.Single(received);
+      Assert.Equal("after-edit", received[0].Prompt);
+
+      return true;
+    });
+  }
+
+  [Fact]
+  public void Refresh_WithACollidingCombination_DoesNotBlockOnRetries()
+  {
+    RunOnSta(() =>
+    {
+      var events = new ProcessInputEventService();
+      var prompt = NewPrompt(Keys.F13, "prompt-a");
+      _promptRepository.AddPromptAsync(prompt).GetAwaiter().GetResult();
+      _keyBindingState.InitAsync().GetAwaiter().GetResult();
+
+      using var listener = new HotKeyListener(_keyBindingState, events);
+      listener.RegisterAll();
+
+      // Occupy the prompt's combo from a separate window so Refresh's re-registration of it
+      // genuinely fails, the way a real collision after a layout switch would.
+      const int blockerId = 998;
+      const uint modAltControlShiftNoRepeat = 0x0001 | 0x0002 | 0x0004 | 0x4000;
+      var blocker = new NativeWindow();
+      blocker.CreateHandle(new CreateParams { Caption = "hotkey-blocker" });
+
+      try
+      {
+        // Refresh unregisters everything first, so this only succeeds once the listener has
+        // released its own registration for prompt-a.
+        listener.UnregisterAll();
+        Assert.True(RegisterHotKey(blocker.Handle, blockerId, modAltControlShiftNoRepeat, (uint)Keys.F13));
+
+        var stopwatch = Stopwatch.StartNew();
+        listener.Refresh();
+        stopwatch.Stop();
+
+        // bug #5: Refresh runs on the UI thread inside WndProc. A single failed attempt is
+        // near-instant; the retry path used at startup sleeps 4 x 50ms = 200ms between attempts,
+        // so a comfortably lower bound proves the retries were skipped rather than merely fast.
+        Assert.True(stopwatch.ElapsedMilliseconds < 150,
+          $"Refresh took {stopwatch.ElapsedMilliseconds}ms, expected it to skip retry sleeps entirely");
+      }
+      finally
+      {
+        UnregisterHotKey(blocker.Handle, blockerId);
+        blocker.DestroyHandle();
+      }
+
+      return true;
+    });
+  }
+
+  [Fact]
+  public void Dispose_CalledTwice_DoesNotThrow()
+  {
+    RunOnSta(() =>
+    {
+      var events = new ProcessInputEventService();
+      var listener = new HotKeyListener(_keyBindingState, events);
+
+      listener.Dispose();
+      var thrown = Record.Exception(() => listener.Dispose());
+
+      Assert.Null(thrown);
+      return true;
+    });
+  }
+
+  [Fact]
+  public void MethodsCalledAfterDispose_ThrowObjectDisposedException()
+  {
+    RunOnSta(() =>
+    {
+      var events = new ProcessInputEventService();
+      var prompt = NewPrompt(Keys.F13, "prompt-a");
+      _promptRepository.AddPromptAsync(prompt).GetAwaiter().GetResult();
+      _keyBindingState.InitAsync().GetAwaiter().GetResult();
+
+      var listener = new HotKeyListener(_keyBindingState, events);
+      listener.Dispose();
+
+      Assert.Throws<ObjectDisposedException>(() => listener.RegisterAll());
+      Assert.Throws<ObjectDisposedException>(
+        () => listener.Register(prompt.Id, prompt.RightKey, prompt.LeftKey, prompt.Promt));
+      Assert.Throws<ObjectDisposedException>(() => listener.Refresh());
+      Assert.Throws<ObjectDisposedException>(() => listener.TriggerHotkey(1));
 
       return true;
     });

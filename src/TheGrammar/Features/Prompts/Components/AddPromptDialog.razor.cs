@@ -33,8 +33,15 @@ public partial class AddPromptDialog
 
             await PromptRepository.AddPromptAsync(prompt);
             await KeyBindingState.InitAsync();
-            HotKeyListener.Register(prompt.Id, prompt.RightKey, prompt.LeftKey, prompt.Promt);
-            Snackbar.Add($"Added prompt: {prompt}", Severity.Success);
+            var registered = HotKeyListener.Register(prompt.Id, key: prompt.RightKey, modifiers: prompt.LeftKey, prompt: prompt.Promt);
+            if (registered)
+            {
+                Snackbar.Add($"Added prompt: {prompt}", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"Added prompt, but the hotkey {prompt} is already in use by another shortcut", Severity.Warning);
+            }
             MudDialog!.Close(DialogResult.Ok(true));
         }
         catch (Exception ex)
