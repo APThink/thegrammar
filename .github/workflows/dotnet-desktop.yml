@@ -27,6 +27,9 @@ jobs:
       - name: Build Solution
         run: dotnet build TheGrammar.sln --configuration Release --no-restore
 
+      - name: Run Tests
+        run: dotnet test TheGrammar.sln --configuration Release --no-build --verbosity normal
+
   release:
     needs: build
     if: github.event_name == 'release'
