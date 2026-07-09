@@ -1,9 +1,63 @@
 @page "/settings"
+@using TheGrammar.Features.HotKeys
+@using TheGrammar.Features.PrompProcessor
+@using TheGrammar.Features.LocalAI
+@using TheGrammar.Features.Settings.Components
 
 <MudText Typo="Typo.h6" Style="padding-bottom: 25px">Settings</MudText>
 
 <div style="display: flex; flex-direction: column; gap: 20px;">
 
+        <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.subtitle1">AI Provider</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudRadioGroup T="AiProvider" Value="_settingsOption.AiProvider" ValueChanged="OnAiProviderChanged">
+                <MudRadio Value="AiProvider.OpenAi" Color="Color.Primary">OpenAI (Cloud)</MudRadio>
+                <MudRadio Value="AiProvider.Local" Color="Color.Primary">Foundry Local</MudRadio>
+            </MudRadioGroup>
+        </MudCardContent>
+    </MudCard>
+    @if (_settingsOption.AiProvider == AiProvider.Local)
+    {
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.subtitle1">Foundry Local</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: flex-end; gap: 10px;">
+                    <MudSelect T="string"
+                               Label="Model"
+                               HelperText="@(_cachedLocalModels.Count == 0 ? "No models downloaded yet - click + to add one" : "Select a downloaded model")"
+                               Value="_settingsOption.LocalModelAlias"
+                               ValueChanged="OnSelectedLocalModelChanged"
+                               Disabled="@_isRefreshingLocalModel"
+                               Style="flex: 1">
+                        @foreach (var model in _cachedLocalModels)
+                        {
+                            <MudSelectItem Value="@model.Alias">@model.DisplayName</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddLocalModel" Title="Add local model" />
+                </div>
+                @if (_isRefreshingLocalModel)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                }
+                else if (_selectedLocalModel is not null)
+                {
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                        Status: @(_selectedLocalModel.IsLoaded ? "Loaded" : "Downloaded")
+                    </MudText>
+                }
+            </MudCardContent>
+        </MudCard>
+    }
     <MudCard>
         <MudCardHeader>
             <CardHeaderContent>
@@ -39,7 +93,6 @@
             <MudButton Variant="Variant.Filled" OnClick="SaveOpenAiClickHandler" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Primary" Size="Size.Large">@(_isEditingApiKey ? "Save & Restart" : "Save")</MudButton>
         </MudCardActions>
     </MudCard>
-
     <MudCard>
         <MudCardHeader>
             <CardHeaderContent>

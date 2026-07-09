@@ -5,6 +5,7 @@ using TheGrammar.Database;
 using MudBlazor;
 using TheGrammar.Features.HotKeys.Events;
 using TheGrammar.Features.OpenAI;
+using TheGrammar.Features.PrompProcessor;
 using TheGrammar.Features.Settings;
 
 namespace TheGrammar.Features.Dashboard;
@@ -29,7 +30,9 @@ public partial class Index : IDisposable
     protected override async Task OnInitializedAsync()
     {
         subscription = IProcessInputEventService.ProcessFinishEvents.Subscribe(OnEventReceived);
-        currentModel = ChatVersionState.GetCurrentModelKey();
+        currentModel = SettingsOptionSnapshot.Value.AiProvider == AiProvider.Local
+            ? SettingsOptionSnapshot.Value.LocalModelAlias ?? "No model selected"
+            : ChatVersionState.GetCurrentModelKey();
         apiKeySet = !string.IsNullOrWhiteSpace(ApiKeyStore.Load());
         autoStartEnabled = SettingsOptionSnapshot.Value.AutoStartEnabled;
         await CountRequestAsync();

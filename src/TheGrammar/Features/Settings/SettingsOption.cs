@@ -1,5 +1,7 @@
-﻿using System.Text.Json.Nodes;
+using System.Text.Json.Nodes;
 using System.Text.Json;
+using TheGrammar.Features.HotKeys;
+using TheGrammar.Features.PrompProcessor;
 
 namespace TheGrammar.Features.Settings;
 
@@ -10,8 +12,14 @@ public class SettingsOption
     public bool AutoStartEnabled { get; set; }
     public bool PlaySoundOnProcessStart { get; set; }
     public bool AddAsteriskAtTheEndOfResponse { get; set; }
+    public AiProvider AiProvider { get; set; } = AiProvider.OpenAi;
+    public string? LocalModelAlias { get; set; }
 
-    public static void UpdateSettings(string propertyName, bool value)
+    public static void UpdateSettings(string propertyName, bool value) => UpdateSettingsInternal(propertyName, value);
+
+    public static void UpdateSettings(string propertyName, string value) => UpdateSettingsInternal(propertyName, value);
+
+    private static void UpdateSettingsInternal(string propertyName, JsonNode? value)
     {
         var appSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
 
