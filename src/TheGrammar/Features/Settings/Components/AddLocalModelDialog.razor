@@ -1,0 +1,28 @@
+<MudDialog>
+    <DialogContent>
+        @if (_isLoadingCatalog)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else
+        {
+            <MudSelect T="string" Label="Model" HelperText="Select a model from the Foundry Local catalog" @bind-Value="_selectedAlias" Style="width: 100%;">
+                @foreach (var model in _catalogModels)
+                {
+                    <MudSelectItem Value="@model.Alias">@model.DisplayName@(model.IsCached ? " (downloaded)" : "")</MudSelectItem>
+                }
+            </MudSelect>
+        }
+
+        @if (_isDownloading)
+        {
+            <MudProgressLinear Value="_downloadProgress" Color="Color.Primary" Class="mt-4" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="@(_isDownloading || string.IsNullOrEmpty(_selectedAlias))">
+            Download &amp; Use
+        </MudButton>
+    </DialogActions>
+</MudDialog>

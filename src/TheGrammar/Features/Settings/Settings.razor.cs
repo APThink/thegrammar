@@ -3,6 +3,9 @@ using Microsoft.Extensions.Options;
 using TheGrammar.Features.OpenAI;
 using TheGrammar.Features.Settings.Components;
 using MudBlazor;
+using TheGrammar.Features.HotKeys;
+using TheGrammar.Features.LocalAI;
+using TheGrammar.Features.PrompProcessor;
 
 namespace TheGrammar.Features.Settings;
 
@@ -12,6 +15,9 @@ public partial class Settings
   private string _newApiKey = string.Empty;
   private bool _isEditingApiKey;
   private SettingsOption _settingsOption = new();
+  private LocalModelInfo? _selectedLocalModel;
+  private IReadOnlyList<LocalModelInfo> _cachedLocalModels = [];
+  private bool _isRefreshingLocalModel;
 
   private string MaskedApiKey => _apiKey.Length > 4
     ? new string('•', _apiKey.Length - 4) + _apiKey[^4..]
@@ -35,11 +41,17 @@ public partial class Settings
   [Inject] public ChatVersionState ChatVersionState { get; set; } = null!;
   [Inject] public IDialogService DialogService { get; set; } = null!;
   [Inject] public ModelRepository ModelRepository { get; set; } = null!;
+  [Inject] public FoundryLocalCatalogService LocalCatalogService { get; set; } = null!;
 
   protected override void OnInitialized()
   {
     _apiKey = ApiKeyStore.Load() ?? string.Empty;
     _settingsOption = SettingsOptionSnapshot.Value;
+
+    if (_settingsOption.AiProvider == AiProvider.Local)
+    {
+      _ = RefreshLocalModelsAsync();
+    }
 
     StateHasChanged();
     base.OnInitialized();
@@ -107,6 +119,79 @@ public partial class Settings
   {
     _settingsOption.PlaySoundOnProcessStart = shouldPlaySoundOnProcessStart;
     SettingsOption.UpdateSettings(nameof(SettingsOption.PlaySoundOnProcessStart), shouldPlaySoundOnProcessStart);
+  }
+
+  public void OnAiProviderChanged(AiProvider provider)
+  {
+    _settingsOption.AiProvider = provider;
+    SettingsOption.UpdateSettings(nameof(SettingsOption.AiProvider), provider.ToString());
+
+    if (provider == AiProvider.Local)
+    {
+      _ = RefreshLocalModelsAsync();
+    }
+  }
+
+  private async Task RefreshLocalModelsAsync()
+  {
+    _isRefreshingLocalModel = true;
+    StateHasChanged();
+
+    try
+    {
+      var models = await LocalCatalogService.GetCatalogModelsAsync();
+      _cachedLocalModels = models.Where(m => m.IsCached).ToList();
+
+      var alias = _settingsOption.LocalModelAlias;
+      _selectedLocalModel = !string.IsNullOrWhiteSpace(alias)
+        ? models.FirstOrDefault(m => m.Alias == alias)
+        : null;
+    }
+    finally
+    {
+      _isRefreshingLocalModel = false;
+      StateHasChanged();
+    }
+  }
+
+  public async Task OnSelectedLocalModelChanged(string alias)
+  {
+    if (string.IsNullOrEmpty(alias))
+    {
+      return;
+    }
+
+    _isRefreshingLocalModel = true;
+    StateHasChanged();
+
+    try
+    {
+      await LocalCatalogService.DownloadAndLoadAsync(alias, new Progress<float>());
+      SettingsOption.UpdateSettings(nameof(SettingsOption.LocalModelAlias), alias);
+      _settingsOption.LocalModelAlias = alias;
+      await RefreshLocalModelsAsync();
+    }
+    catch (Exception ex)
+    {
+      Snackbar.Add($"Failed to select model: {ex.Message}", Severity.Error);
+    }
+    finally
+    {
+      _isRefreshingLocalModel = false;
+      StateHasChanged();
+    }
+  }
+
+  public async Task AddLocalModel()
+  {
+    var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+    var dialogReference = await DialogService.ShowAsync<AddLocalModelDialog>("Add Local Model", options);
+    var result = await dialogReference.Result;
+
+    if (result is { Canceled: false, Data: true })
+    {
+      await RefreshLocalModelsAsync();
+    }
   }
 
   public void OnAddAsteriskAtTheEndOfResponseChanged(bool shouldAddAsteriskAtTheEndOfResponse)

@@ -8,6 +8,7 @@ using TheGrammar.Database;
 using TheGrammar.Domain;
 using TheGrammar.Features.HotKeys.Events;
 using TheGrammar.Features.OpenAI;
+using TheGrammar.Features.PrompProcessor;
 using TheGrammar.Features.Settings;
 
 namespace TheGrammar.Features.HotKeys.Services
@@ -18,21 +19,22 @@ namespace TheGrammar.Features.HotKeys.Services
     private readonly IProcessInputEventService _processService;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
     private readonly ILogger<InputProcessingManager> _logger;
-    private readonly OpenAiService _openAiService;
+    private readonly AiServiceResolver _aiServiceResolver;
     private readonly CompositeDisposable _subscriptions = new();
+
 
     // Track active operations by process ID
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _activeOperations = new();
 
     public InputProcessingManager(
       IProcessInputEventService processService,
-      OpenAiService openAiService,
+      AiServiceResolver aiServiceResolver,
       IDbContextFactory<ApplicationDbContext> dbContextFactory,
       ILogger<InputProcessingManager> logger,
       IOptionsMonitor<SettingsOption> settingsMonitor)
     {
       _processService = processService;
-      _openAiService = openAiService;
+      _aiServiceResolver  = aiServiceResolver;
       _dbContextFactory = dbContextFactory;
       _logger = logger;
       _settingsOption = settingsMonitor.CurrentValue;
@@ -97,12 +99,12 @@ namespace TheGrammar.Features.HotKeys.Services
       }, stoppingToken);
     }
     
-    private async Task<OpenApiResult> ProcessUserInputWithCancellationAsync(ProcessStartDto dto,
+    private async Task<AiResult> ProcessUserInputWithCancellationAsync(ProcessStartDto dto,
       CancellationToken cancellationToken)
     {
       // We need to modify the OpenAiService to accept a cancellation token
-      var result = await _openAiService.ProcessAsync(dto.Prompt, dto.Input, cancellationToken).ConfigureAwait(false);
-      return result;
+      var service = _aiServiceResolver.GetCurrentService();
+      return await service.ProcessAsync(dto.Prompt, dto.Input, cancellationToken);
     }
 
     private void CancelAllActiveOperations()
@@ -146,25 +148,25 @@ namespace TheGrammar.Features.HotKeys.Services
       staThread.Join();
     }
 
-    private async Task SaveRequest(OpenApiResult openApiResult)
+    private async Task SaveRequest(AiResult aiResult)
     {
       using var context = _dbContextFactory.CreateDbContext();
       var request = new Request
       {
-        RequestText = openApiResult.OriginalText,
-        ResponseText = openApiResult.ModifiedText,
-        ModelKey = openApiResult.ModelKey
+        RequestText = aiResult.OriginalText,
+        ResponseText = aiResult.ModifiedText,
+        ModelKey = aiResult.ModelKey
       };
       context.Requests.Add(request);
       await context.SaveChangesAsync();
     }
 
-    private void SendProcessFinishNotification(OpenApiResult openApiResult)
+    private void SendProcessFinishNotification(AiResult aiResult)
     {
       var processFinishDto = new ProcessFinishDto(
-        OriginalText: openApiResult.OriginalText,
-        ModifiedText: openApiResult.ModifiedText,
-        ModelKey: openApiResult.ModelKey);
+        OriginalText: aiResult.OriginalText,
+        ModifiedText: aiResult.ModifiedText,
+        ModelKey: aiResult.ModelKey);
       _processService.TriggerProcessFinish(processFinishDto);
     }
 
