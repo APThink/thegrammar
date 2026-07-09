@@ -6,12 +6,14 @@ namespace TheGrammar.Features.HotKeys;
 public interface IGlobalKeyBindingState
 {
     Dictionary<int, (Keys LeftKey, Keys RightKey, string Prompt)> KeyBindings { get; }
+    bool IsInitialized { get; }
     Task InitAsync();
 }
 
 public class GlobalKeyBindingState : IGlobalKeyBindingState
 {
     public Dictionary<int, (Keys LeftKey, Keys RightKey, string Prompt)> KeyBindings { get; private set; } = new();
+    public bool IsInitialized { get; private set; }
 
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
 
@@ -35,5 +37,6 @@ public class GlobalKeyBindingState : IGlobalKeyBindingState
         }
 
         KeyBindings = keyBindings;
+        IsInitialized = true;
     }
 }
