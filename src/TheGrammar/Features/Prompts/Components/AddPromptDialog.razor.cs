@@ -9,50 +9,65 @@ namespace TheGrammar.Features.Prompts.Components;
 
 public partial class AddPromptDialog
 {
-    private Keys _leftKey = Keys.Shift | Keys.Control;
-    private Keys _rightKey = Keys.A;
-    private string _prompt = "Hello World";
+  private Keys _leftKey = Keys.Shift | Keys.Control;
+  private Keys _rightKey = Keys.A;
+  private string _prompt = "Hello World";
+  private List<Keys> _availableRightKeys = [];
 
-    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
-    [Inject]  public PromptRepository PromptRepository { get; set; } = null!;
-    [Inject] public ISnackbar Snackbar { get; set; } = null!;
-    [Inject] public IGlobalKeyBindingState KeyBindingState { get; set; } = null!;
-    [Inject] public HotKeyListener HotKeyListener { get; set; } = null!;
+  [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+  [Inject] public PromptRepository PromptRepository { get; set; } = null!;
+  [Inject] public ISnackbar Snackbar { get; set; } = null!;
+  [Inject] public IGlobalKeyBindingState KeyBindingState { get; set; } = null!;
+  [Inject] public HotKeyListener HotKeyListener { get; set; } = null!;
 
-    private static List<Keys> PossibleKeys => Enum.GetValues(typeof(Keys)).Cast<Keys>().Where(k => (int)k >= 65 && (int)k <= 90 || (int)k >= 112 && (int)k <= 123).ToList();
-    async Task Submit()
+  private static List<Keys> PossibleKeys => Enum.GetValues(typeof(Keys)).Cast<Keys>()
+    .Where(k => (int)k >= 65 && (int)k <= 90 || (int)k >= 112 && (int)k <= 123).ToList();
+
+  protected override async Task OnInitializedAsync()
+  {
+    var usedRightKeys = await PromptRepository.GetUsedRightKeysAsync(_leftKey);
+    _availableRightKeys = PossibleKeys.Where(k => !usedRightKeys.Contains(k)).ToList();
+    if (_availableRightKeys.Count > 0 && !_availableRightKeys.Contains(_rightKey))
     {
-        try
-        {
-            var prompt = new Prompt
-            {
-                LeftKey = _leftKey,
-                RightKey = _rightKey,
-                Promt = _prompt
-            };
-
-            await PromptRepository.AddPromptAsync(prompt);
-            await KeyBindingState.InitAsync();
-            var registered = HotKeyListener.Register(prompt.Id, key: prompt.RightKey, modifiers: prompt.LeftKey, prompt: prompt.Promt);
-            if (registered)
-            {
-                Snackbar.Add($"Added prompt: {prompt}", Severity.Success);
-            }
-            else
-            {
-                Snackbar.Add($"Added prompt, but the hotkey {prompt} is already in use by another shortcut", Severity.Warning);
-            }
-            MudDialog!.Close(DialogResult.Ok(true));
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error adding prompt: {ex.Message}", Severity.Error);
-            MudDialog!.Close(DialogResult.Ok(false));
-        }
+      _rightKey = _availableRightKeys[0];
     }
+  }
 
-    private void Cancel()
+  async Task Submit()
+  {
+    try
     {
-        MudDialog.Cancel();
+      var prompt = new Prompt
+      {
+        LeftKey = _leftKey,
+        RightKey = _rightKey,
+        Promt = _prompt
+      };
+
+      await PromptRepository.AddPromptAsync(prompt);
+      await KeyBindingState.InitAsync();
+      var registered = HotKeyListener.Register(prompt.Id, key: prompt.RightKey, modifiers: prompt.LeftKey,
+        prompt: prompt.Promt);
+      if (registered)
+      {
+        Snackbar.Add($"Added prompt: {prompt}", Severity.Success);
+      }
+      else
+      {
+        Snackbar.Add($"Added prompt, but the hotkey {prompt} is already in use by another shortcut", Severity.Warning);
+      }
+
+      MudDialog!.Close(DialogResult.Ok(true));
     }
+    catch (Exception ex)
+    {
+      Snackbar.Add($"Error adding prompt: {ex.Message}", Severity.Error);
+      MudDialog!.Close(DialogResult.Ok(false));
+    }
+  }
+
+  private void Cancel()
+  {
+    MudDialog.Cancel();
+  }
 }

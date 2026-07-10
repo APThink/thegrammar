@@ -12,7 +12,7 @@
 
                     <MudSelect @bind-Value="@prompt.RightKey" T="Keys" Label="Right Keys"
                                AnchorOrigin="Origin.BottomCenter">
-                        @foreach (var possibleKey in PossibleKeys)
+                        @foreach (var possibleKey in AvailableRightKeys(prompt))
                         {
                             <MudSelectItem Value="@possibleKey"/>
                         }

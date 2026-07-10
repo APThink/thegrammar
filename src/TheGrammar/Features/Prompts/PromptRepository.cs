@@ -1,35 +1,54 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using TheGrammar.Database;
 using TheGrammar.Domain;
 
 namespace TheGrammar.Features.Prompts;
 
-public class PromptRepository
+public class PromptRepository(IDbContextFactory<ApplicationDbContext> dbContextFactory)
 {
-    private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+  public async Task<List<Prompt>> GetPromptsAsync()
+  {
+    await using var context = await dbContextFactory.CreateDbContextAsync();
+    return await context.Prompts.ToListAsync();
+  }
 
-    public PromptRepository(IDbContextFactory<ApplicationDbContext> dbContextFactory)
+  public async Task<List<Keys>> GetUsedRightKeysAsync(Keys leftKey, int? excludingPromptId = null)
+  {
+    await using var context = await dbContextFactory.CreateDbContextAsync();
+    var query = context.Prompts.Where(p => p.LeftKey == leftKey);
+    if (excludingPromptId is { } id)
     {
-        _dbContextFactory = dbContextFactory;
+      query = query.Where(p => p.Id != id);
     }
 
-    public async Task<List<Prompt>> GetPromptsAsync()
-    {
-        using var context = _dbContextFactory.CreateDbContext();
-        return await context.Prompts.ToListAsync();
-    }
+    return await query.Select(p => p.RightKey).ToListAsync();
+  }
 
-    public async Task AddPromptAsync(Prompt prompt)
-    {
-        using var context = _dbContextFactory.CreateDbContext();
-        context.Prompts.Add(prompt);
-        await context.SaveChangesAsync();
-    }
+  public async Task AddPromptAsync(Prompt prompt)
+  {
+    await using var context = await dbContextFactory.CreateDbContextAsync();
+    context.Prompts.Add(prompt);
+    await SaveChangesAsync(context, prompt);
+  }
 
-    public async Task UpdatePromptAsync(Prompt prompt)
+  public async Task UpdatePromptAsync(Prompt prompt)
+  {
+    await using var context = await dbContextFactory.CreateDbContextAsync();
+    context.Prompts.Update(prompt);
+    await SaveChangesAsync(context, prompt);
+  }
+
+  private static async Task SaveChangesAsync(ApplicationDbContext context, Prompt prompt)
+  {
+    try
     {
-        using var context = _dbContextFactory.CreateDbContext();
-        context.Prompts.Update(prompt);
-        await context.SaveChangesAsync();
+      await context.SaveChangesAsync();
     }
+    catch (DbUpdateException ex) when (ex.InnerException is SqliteException { SqliteErrorCode: 19 })
+    {
+      throw new DuplicateHotkeyException(
+        $"The hotkey {prompt} is already assigned to another prompt.", ex);
+    }
+  }
 }
