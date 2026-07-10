@@ -378,6 +378,47 @@ public class HotKeyListenerIntegrationTests : IDisposable
   }
 
   [Fact]
+  public void EditingOnePrompt_WithUnchangedKeyCombination_DoesNotBreakOtherPrompts()
+  {
+    RunOnSta(() =>
+    {
+      var events = new ProcessInputEventService();
+      var received = new List<ProcessStartDto>();
+      events.ProcessStartEvents.Subscribe(received.Add);
+
+      var promptA = NewPrompt(Keys.F13, "prompt-a");
+      var promptB = NewPrompt(Keys.F14, "prompt-b");
+      _promptRepository.AddPromptAsync(promptA).GetAwaiter().GetResult();
+      _promptRepository.AddPromptAsync(promptB).GetAwaiter().GetResult();
+      _keyBindingState.InitAsync().GetAwaiter().GetResult();
+
+      using var listener = new HotKeyListener(_keyBindingState, events);
+      listener.RegisterAll();
+
+      var idA = listener.TryGetHotkeyId(promptA.Id);
+      var idB = listener.TryGetHotkeyId(promptB.Id);
+
+      // act: save promptA unchanged, exactly like PromptView.ChangePromptAsync
+      _promptRepository.UpdatePromptAsync(promptA).GetAwaiter().GetResult();
+      _keyBindingState.InitAsync().GetAwaiter().GetResult();
+      var registered = listener.Register(promptA.Id, promptA.RightKey, promptA.LeftKey, promptA.Promt);
+      Assert.True(registered);
+
+      // promptB must still fire
+      PostHotkey(listener.Handle, idB!.Value);
+      Assert.Single(received);
+      Assert.Equal("prompt-b", received[0].Prompt);
+
+      // promptA must still fire too
+      PostHotkey(listener.Handle, idA!.Value);
+      Assert.Equal(2, received.Count);
+      Assert.Equal("prompt-a", received[1].Prompt);
+
+      return true;
+    });
+  }
+
+  [Fact]
   public void EditingPromptText_WithUnchangedKeyCombination_UpdatesTextWithoutReRegistering()
   {
     RunOnSta(() =>
