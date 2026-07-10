@@ -133,6 +133,7 @@ public partial class MainForm : Form
       e.Cancel = true;
       Visible = false;
       ShowInTaskbar = false;
+      return;
     }
 
     _globalHotKeyHandler.Dispose();
